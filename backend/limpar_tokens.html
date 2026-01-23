@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpeza de Tokens - Sistema de Licitações</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .danger {
+            background-color: #dc3545;
+        }
+        .danger:hover {
+            background-color: #c82333;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Sistema de Licitações - Correção de Tokens</h1>
+        
+        <div class="warning">
+            <h3>⚠️ Atenção: Problema de Tokens Detectado</h3>
+            <p>O sistema detectou tokens antigos que estão causando erros na funcionalidade de deletar processos.</p>
+            <p>Isso acontece porque os tokens foram atualizados para um formato mais seguro.</p>
+        </div>
+
+        <h3>O que precisa ser feito:</h3>
+        <ol>
+            <li><strong>Limpar tokens antigos</strong> (clique no botão abaixo)</li>
+            <li><strong>Fazer login novamente</strong> para obter um token no formato correto</li>
+            <li><strong>Testar a funcionalidade de delete</strong></li>
+        </ol>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button onclick="clearTokens()" class="danger">
+                🗑️ Limpar Tokens Antigos
+            </button>
+            <button onclick="goToLogin()">
+                🔑 Ir para Login
+            </button>
+            <button onclick="checkTokens()">
+                🔍 Verificar Status dos Tokens
+            </button>
+        </div>
+
+        <div id="status" class="hidden"></div>
+
+        <h3>📋 Detalhes Técnicos:</h3>
+        <ul>
+            <li><strong>Problema:</strong> Tokens antigos usam formato de username (string)</li>
+            <li><strong>Solução:</strong> Novos tokens usam formato de user_id (integer)</li>
+            <li><strong>Impacto:</strong> Delete operations retornavam erro 500</li>
+            <li><strong>Status:</strong> Backend corrigido e rodando</li>
+        </ul>
+
+        <div class="warning">
+            <p><strong>Após limpar os tokens:</strong></p>
+            <p>1. Você será redirecionado automaticamente para o login se tentar acessar páginas protegidas</p>
+            <p>2. Faça login normalmente com suas credenciais</p>
+            <p>3. A funcionalidade de delete funcionará corretamente</p>
+        </div>
+    </div>
+
+    <script>
+        function clearTokens() {
+            // Limpar todos os tokens possíveis
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('authToken');
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('user');
+            sessionStorage.removeItem('authToken');
+            
+            // Mostrar status de sucesso
+            const status = document.getElementById('status');
+            status.className = 'success';
+            status.innerHTML = `
+                <h4>✅ Tokens Limpos com Sucesso!</h4>
+                <p>Todos os tokens antigos foram removidos do navegador.</p>
+                <p>Agora você pode fazer login novamente para obter um token no formato correto.</p>
+                <p><strong>Próximo passo:</strong> Clique em "Ir para Login" ou acesse manualmente: <a href="http://localhost:5174/login">http://localhost:5174/login</a></p>
+            `;
+            status.classList.remove('hidden');
+            
+            console.log('🧹 Tokens limpos:', {
+                localStorage_cleared: ['token', 'user', 'authToken'],
+                sessionStorage_cleared: ['token', 'user', 'authToken'],
+                timestamp: new Date().toLocaleString()
+            });
+        }
+
+        function checkTokens() {
+            const tokens = {
+                localStorage: {
+                    token: localStorage.getItem('token'),
+                    user: localStorage.getItem('user'),
+                    authToken: localStorage.getItem('authToken')
+                },
+                sessionStorage: {
+                    token: sessionStorage.getItem('token'),
+                    user: sessionStorage.getItem('user'),
+                    authToken: sessionStorage.getItem('authToken')
+                }
+            };
+
+            const status = document.getElementById('status');
+            const hasTokens = Object.values(tokens.localStorage).some(t => t !== null) || 
+                             Object.values(tokens.sessionStorage).some(t => t !== null);
+
+            if (hasTokens) {
+                status.className = 'warning';
+                status.innerHTML = `
+                    <h4>⚠️ Tokens Encontrados</h4>
+                    <p>Ainda existem tokens armazenados no navegador:</p>
+                    <pre>${JSON.stringify(tokens, null, 2)}</pre>
+                    <p><strong>Recomendação:</strong> Clique em "Limpar Tokens Antigos" para remover todos.</p>
+                `;
+            } else {
+                status.className = 'success';
+                status.innerHTML = `
+                    <h4>✅ Nenhum Token Encontrado</h4>
+                    <p>O navegador está limpo. Você pode fazer login normalmente.</p>
+                `;
+            }
+            status.classList.remove('hidden');
+            
+            console.log('🔍 Status dos tokens:', tokens);
+        }
+
+        function goToLogin() {
+            window.open('http://localhost:5174/login', '_blank');
+        }
+
+        // Verificar automaticamente ao carregar a página
+        window.onload = function() {
+            checkTokens();
+        }
+    </script>
+</body>
+</html>
