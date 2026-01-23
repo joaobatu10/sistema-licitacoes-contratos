@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [
     react(),
   ],
-  base: '/sistema-licitacoes-contratos/',
+  
 
 }
 )

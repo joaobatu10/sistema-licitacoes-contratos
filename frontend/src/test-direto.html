@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Direto API</title>
+</head>
+<body>
+    <h1>Teste Direto da API</h1>
+    
+    <div>
+        <h2>1. Login</h2>
+        <button onclick="fazerLogin()">Fazer Login</button>
+        <div id="login-result"></div>
+    </div>
+    
+    <div>
+        <h2>2. Criar Licitação</h2>
+        <button onclick="criarLicitacao()">Criar Licitação</button>
+        <div id="licitacao-result"></div>
+    </div>
+    
+    <div>
+        <h2>3. Logs</h2>
+        <div id="logs" style="background: #f0f0f0; padding: 10px; font-family: monospace; white-space: pre-wrap;"></div>
+    </div>
+
+    <script>
+        let token = null;
+        
+        function log(message) {
+            console.log(message);
+            const logsDiv = document.getElementById('logs');
+            logsDiv.textContent += new Date().toLocaleTimeString() + ' - ' + message + '\n';
+        }
+        
+        async function fazerLogin() {
+            log('Iniciando login...');
+            
+            try {
+                const formData = new FormData();
+                formData.append('username', 'admin');
+                formData.append('password', '123456');
+                
+                const response = await fetch('http://127.0.0.1:8000/login', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                log(`Status login: ${response.status}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    token = data.access_token;
+                    log(`Token obtido: ${token.substring(0, 50)}...`);
+                    
+                    // Salvar no localStorage também
+                    localStorage.setItem('token', token);
+                    
+                    document.getElementById('login-result').innerHTML = '✅ Login realizado com sucesso!';
+                } else {
+                    const errorText = await response.text();
+                    log(`Erro no login: ${errorText}`);
+                    document.getElementById('login-result').innerHTML = '❌ Erro no login';
+                }
+            } catch (error) {
+                log(`Exceção no login: ${error}`);
+                document.getElementById('login-result').innerHTML = '❌ Exceção no login';
+            }
+        }
+        
+        async function criarLicitacao() {
+            if (!token) {
+                log('Nenhum token disponível. Faça login primeiro.');
+                return;
+            }
+            
+            log('Iniciando criação de licitação...');
+            
+            const licitacaoData = {
+                numero_processo: "2024/HTML001",
+                modalidade: "Pregão Eletrônico",
+                objeto: "Teste via HTML direto",
+                orgao_responsavel: "Secretaria de Teste HTML",
+                data_abertura: "2024-10-21",
+                status: "Aberto"
+            };
+            
+            log(`Dados a enviar: ${JSON.stringify(licitacaoData, null, 2)}`);
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8000/licitacoes/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(licitacaoData)
+                });
+                
+                log(`Status criação: ${response.status}`);
+                log(`Headers resposta: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`Licitação criada: ${JSON.stringify(data, null, 2)}`);
+                    document.getElementById('licitacao-result').innerHTML = `✅ Licitação criada com ID: ${data.id_licitacao}`;
+                } else {
+                    const errorText = await response.text();
+                    log(`Erro na criação: ${errorText}`);
+                    document.getElementById('licitacao-result').innerHTML = `❌ Erro ${response.status}: ${errorText}`;
+                }
+            } catch (error) {
+                log(`Exceção na criação: ${error}`);
+                document.getElementById('licitacao-result').innerHTML = '❌ Exceção na criação';
+            }
+        }
+        
+        // Verificar se já existe token no localStorage
+        window.onload = function() {
+            const savedToken = localStorage.getItem('token');
+            if (savedToken) {
+                token = savedToken;
+                log(`Token encontrado no localStorage: ${token.substring(0, 50)}...`);
+            }
+        };
+    </script>
+</body>
+</html>
