@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import axios from "axios";
+import { api } from "../services/api";
 import {
   Container,
   Box,
@@ -19,27 +19,8 @@ const Login = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Configurar tela cheia sem barras de rolagem
-  React.useEffect(() => {
-    document.body.style.margin = '0';
-    document.body.style.padding = '0';
-    document.body.style.overflow = 'hidden';
-    document.body.style.height = '100vh';
-    document.documentElement.style.margin = '0';
-    document.documentElement.style.padding = '0';
-    document.documentElement.style.overflow = 'hidden';
-    document.documentElement.style.height = '100vh';
-    return () => {
-      document.body.style.margin = '';
-      document.body.style.padding = '';
-      document.body.style.overflow = '';
-      document.body.style.height = '';
-      document.documentElement.style.margin = '';
-      document.documentElement.style.padding = '';
-      document.documentElement.style.overflow = '';
-      document.documentElement.style.height = '';
-    };
-  }, []);
+  // ⚠️ NÃO mexa no DOM global em produção
+  // Se precisar layout fullscreen, faça com CSS
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -47,39 +28,30 @@ const Login = () => {
     setError("");
 
     try {
-      // Criando os dados no formato x-www-form-urlencoded
       const params = new URLSearchParams();
       params.append("username", username);
       params.append("password", password);
 
-      const response = await axios.post("http://127.0.0.1:8000/login", params, {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      });
+      const response = await api.post("/login", params);
 
-      if (response.data.access_token) {
-        // Salvar token e dados do usuário
-        localStorage.setItem("token", response.data.access_token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        
-        console.log("Login bem-sucedido, redirecionando...");
-        
-        // Forçar atualização da página para garantir que o estado seja atualizado
-        setTimeout(() => {
-          window.location.href = "/dashboard";
-        }, 100);
+      if (!response?.data?.access_token) {
+        throw new Error("Token não retornado");
       }
-    } catch (error) {
-      console.error("Erro de login:", error);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Response status:", error.response.status);
-      }
+
+      localStorage.setItem("token", response.data.access_token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+
+      // ✅ navegação correta
+      navigate("/dashboard", { replace: true });
+
+    } catch (err) {
+      console.error("Erro de login:", err);
       setError("❌ Erro ao fazer login! Verifique suas credenciais.");
+      return; // ⬅️ evita crash
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <Box
       sx={{
