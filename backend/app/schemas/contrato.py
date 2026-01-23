@@ -9,6 +9,7 @@ class ContratoBase(BaseModel):
     fornecedor: str
     objeto: str
     valor_total: Decimal
+    valor_parcela_mensal: Optional[Decimal] = None
     data_assinatura: date
     data_inicio: date
     data_fim: Optional[date] = None
@@ -22,6 +23,7 @@ class ContratoUpdate(BaseModel):
     fornecedor: Optional[str] = None
     objeto: Optional[str] = None
     valor_total: Optional[Decimal] = None
+    valor_parcela_mensal: Optional[Decimal] = None
     data_assinatura: Optional[date] = None
     data_inicio: Optional[date] = None
     data_fim: Optional[date] = None

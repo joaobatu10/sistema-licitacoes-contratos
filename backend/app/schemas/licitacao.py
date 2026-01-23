@@ -10,6 +10,10 @@ class LicitacaoCreate(BaseModel):
     data_abertura: date
     data_encerramento: Optional[date] = None
     status: str
+    is_gcalc: Optional[bool] = False
+    quartel_ad3: Optional[bool] = False
+    quartel_27gac: Optional[bool] = False
+    quartel_easa: Optional[bool] = False
 
 class LicitacaoOut(LicitacaoCreate):
     id_licitacao: int

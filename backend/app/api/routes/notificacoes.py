@@ -4,7 +4,9 @@ from typing import List, Optional
 from datetime import datetime
 from app.db.session import get_db
 from app.models.notificacao import Notificacao
+from app.models.user import Usuario
 from app.schemas.notificacao import NotificacaoCreate, NotificacaoUpdate, NotificacaoOut
+from app.core.auth import require_admin, require_read_access
 
 router = APIRouter(prefix="/notificacoes", tags=["Notificações"])
 
@@ -14,7 +16,7 @@ def listar_notificacoes(
     apenas_nao_lidas: bool = False,
     db: Session = Depends(get_db)
 ):
-    """Lista notificações. Se usuario_id for fornecido, filtra por usuário específico + globais"""
+    """Lista notificações - TEMPORARIAMENTE sem autenticação para debug. Se usuario_id for fornecido, filtra por usuário específico + globais"""
     query = db.query(Notificacao)
     
     if usuario_id:
@@ -41,8 +43,12 @@ def obter_notificacao(notificacao_id: int, db: Session = Depends(get_db)):
     return notificacao
 
 @router.post("/", response_model=NotificacaoOut, status_code=status.HTTP_201_CREATED)
-def criar_notificacao(notificacao: NotificacaoCreate, db: Session = Depends(get_db)):
-    """Cria uma nova notificação"""
+def criar_notificacao(
+    notificacao: NotificacaoCreate, 
+    db: Session = Depends(get_db),
+    admin_user: Usuario = Depends(require_admin)
+):
+    """Cria uma nova notificação - APENAS ADMINISTRADORES"""
     nova_notificacao = Notificacao(**notificacao.dict())
     db.add(nova_notificacao)
     db.commit()
@@ -53,9 +59,10 @@ def criar_notificacao(notificacao: NotificacaoCreate, db: Session = Depends(get_
 def atualizar_notificacao(
     notificacao_id: int,
     notificacao_update: NotificacaoUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    admin_user: Usuario = Depends(require_admin)
 ):
-    """Atualiza uma notificação"""
+    """Atualiza uma notificação - APENAS ADMINISTRADORES"""
     notificacao = db.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
     if not notificacao:
         raise HTTPException(
@@ -113,8 +120,12 @@ def marcar_todas_como_lidas(usuario_id: Optional[int] = None, db: Session = Depe
     return {"message": f"{len(notificacoes)} notificações marcadas como lidas"}
 
 @router.delete("/{notificacao_id}")
-def deletar_notificacao(notificacao_id: int, db: Session = Depends(get_db)):
-    """Deleta uma notificação"""
+def deletar_notificacao(
+    notificacao_id: int, 
+    db: Session = Depends(get_db),
+    admin_user: Usuario = Depends(require_admin)
+):
+    """Deleta uma notificação - APENAS ADMINISTRADORES"""
     notificacao = db.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
     if not notificacao:
         raise HTTPException(

@@ -22,6 +22,7 @@ import {
   TableRow,
   Paper
 } from '@mui/material';
+import api from "../services/api";
 import {
   PictureAsPdf,
   Assessment,
@@ -64,25 +65,21 @@ const Relatorios = () => {
 
   const fetchLicitacoes = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/licitacoes/");
-      if (response.ok) {
-        const data = await response.json();
-        setLicitacoes(data);
-      }
+      console.log("🔍 Buscando licitações para relatórios...");
+      const response = await api.get("/licitacoes/");
+      setLicitacoes(response.data);
     } catch (error) {
-      console.error("Erro ao buscar licitações:", error);
+      console.error("❌ Erro ao buscar licitações:", error);
     }
   };
 
   const fetchContratos = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/contratos/");
-      if (response.ok) {
-        const data = await response.json();
-        setContratos(data);
-      }
+      console.log("🔍 Buscando contratos para relatórios...");
+      const response = await api.get("/contratos/");
+      setContratos(response.data);
     } catch (error) {
-      console.error("Erro ao buscar contratos:", error);
+      console.error("❌ Erro ao buscar contratos:", error);
     }
   };
 

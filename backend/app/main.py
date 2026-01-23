@@ -9,7 +9,13 @@ from app.api.routes.users import router as users_router
 from app.api.routes.licitacoes import router as licitacoes_router
 from app.api.routes.contratos import router as contratos_router
 from app.api.routes.notificacoes import router as notificacoes_router
+
+# Importar modelos para o create_all
 from app.models.user import Usuario
+from app.models.licitacao import Licitacao
+from app.models.contrato import Contrato
+from app.models.notificacao import Notificacao
+
 from app.core.auth import verify_password, create_access_token
 from app.schemas.user import Token
 from datetime import timedelta
@@ -67,7 +73,7 @@ def login_global(username: str = Form(), password: str = Form(), db: Session = D
     # Criar token
     access_token_expires = timedelta(minutes=30)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
     
     return {

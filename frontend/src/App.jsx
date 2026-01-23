@@ -5,13 +5,17 @@ import Sidebar from "./components/Sidebar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Licitacoes from "./pages/Licitacoes";
+import GCALC from "./pages/GCALC";
 import Contratos from "./pages/Contratos";
+import Processos from "./pages/Processos";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Usuarios from "./pages/Usuarios";
 import Notificacoes from "./pages/Notificacoes";
 import Relatorios from "./pages/Relatorios";
 import CadastroLicitacao from "./pages/CadastroLicitacao";
+import CadastroLicitacaoSimples from "./pages/CadastroLicitacaoSimples";
+import TesteDebug from "./pages/TesteDebug";
 import { useEffect, useState } from "react";
 
 function App() {
@@ -90,10 +94,26 @@ function App() {
               } 
             />
             <Route 
+              path="/gcalc" 
+              element={
+                <ProtectedRoute>
+                  <GCALC />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/contratos" 
               element={
                 <ProtectedRoute>
                   <Contratos />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/processos" 
+              element={
+                <ProtectedRoute>
+                  <Processos />
                 </ProtectedRoute>
               } 
             />
@@ -128,6 +148,14 @@ function App() {
                   <CadastroLicitacao />
                 </ProtectedRoute>
               } 
+            />
+            <Route 
+              path="/cadastro-simples" 
+              element={<CadastroLicitacaoSimples />} 
+            />
+            <Route 
+              path="/debug" 
+              element={<TesteDebug />} 
             />
           </Routes>
         </Container>

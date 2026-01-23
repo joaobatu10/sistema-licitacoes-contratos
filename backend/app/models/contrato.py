@@ -11,6 +11,7 @@ class Contrato(Base):
     fornecedor = Column(String(200), nullable=False)
     objeto = Column(Text, nullable=False)
     valor_total = Column(DECIMAL(15, 2), nullable=False)
+    valor_parcela_mensal = Column(DECIMAL(15, 2), nullable=True)
     data_assinatura = Column(Date, nullable=False)
     data_inicio = Column(Date, nullable=False)
     data_fim = Column(Date, nullable=True)

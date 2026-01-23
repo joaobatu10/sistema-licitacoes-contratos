@@ -1,5 +1,5 @@
 import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Badge } from "@mui/material";
-import { Dashboard, Description, Work, Notifications, People, Assessment } from "@mui/icons-material";
+import { Dashboard, Description, Work, Notifications, People, Assessment, AccountBalance, GroupWork } from "@mui/icons-material";
 import { NavLink } from "react-router-dom";
 import { useState, useEffect } from "react";
 
@@ -68,11 +68,29 @@ const Sidebar = () => {
         </ListItem>
 
         <ListItem disablePadding>
+          <ListItemButton component={NavLink} to="/gcalc">
+            <ListItemIcon>
+              <GroupWork sx={{ color: "white" }} />
+            </ListItemIcon>
+            <ListItemText primary="GCALC" />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding>
           <ListItemButton component={NavLink} to="/contratos">
             <ListItemIcon>
               <Work sx={{ color: "white" }} />
             </ListItemIcon>
             <ListItemText primary="Contratos" />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding>
+          <ListItemButton component={NavLink} to="/processos">
+            <ListItemIcon>
+              <AccountBalance sx={{ color: "white" }} />
+            </ListItemIcon>
+            <ListItemText primary="Processos" />
           </ListItemButton>
         </ListItem>
 
