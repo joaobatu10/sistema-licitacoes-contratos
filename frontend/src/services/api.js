@@ -1,7 +1,8 @@
 import axios from "axios";
 
+
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000", // URL do backend FastAPI
+  baseURL: import.meta.env.VITE_API_URL,
 });
 
 // Interceptor para adicionar token automaticamente
