@@ -23,23 +23,21 @@ from datetime import timedelta
 app = FastAPI(title="Monitoramento de Licitações e Contratos")
 
 # CORS
+# CORS
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://sistema-licitacoes-contratos-mj9k-50dm90kwa.vercel.app/",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:5174", 
-        "http://localhost:5175",
-        "http://localhost:5176",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-        "http://127.0.0.1:5175",
-        "http://127.0.0.1:5176",
-        "https://sistema-licitacoes-contratos-mj9k.vercel.app"
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # cria tabelas (simples – depois você pode migrar para Alembic)
 @app.on_event("startup")
