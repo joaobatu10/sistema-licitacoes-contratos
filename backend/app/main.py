@@ -29,14 +29,14 @@ origins = [
     "http://127.0.0.1:5173",
     "https://sistema-licitacoes-contratos-mj9k-50dm90kwa.vercel.app/",
 ]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,  # <- importante
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 # cria tabelas (simples – depois você pode migrar para Alembic)
