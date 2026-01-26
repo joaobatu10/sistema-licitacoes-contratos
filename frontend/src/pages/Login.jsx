@@ -40,8 +40,7 @@ const Login = () => {
 
       localStorage.setItem("token", response.data.access_token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-
-      // ✅ navegação correta
+      window.dispatchEvent(new Event("auth-changed")); // ✅ atualiza o App na mesma aba
       navigate("/dashboard", { replace: true });
 
     } catch (err) {

@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Box, Container, CircularProgress } from "@mui/material";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
@@ -20,31 +20,33 @@ import { useEffect, useState } from "react";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const location = useLocation();
 
   const checkAuthStatus = () => {
     const token = localStorage.getItem("token");
-    setIsAuthenticated(!!token);
+    const ok = token && token !== "undefined" && token !== "null" && token.trim() !== "";
+    setIsAuthenticated(!!ok);
   };
 
   useEffect(() => {
-    // Verificar se há token válido
     checkAuthStatus();
 
-    // Listener para mudanças no localStorage
-    const handleStorageChange = () => {
-      checkAuthStatus();
-    };
+    const onAuthChanged = () => checkAuthStatus();
+    const onStorage = () => checkAuthStatus();
 
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Verificar mudanças no token a cada 500ms (para mudanças na mesma aba)
-    const interval = setInterval(checkAuthStatus, 500);
+    window.addEventListener("auth-changed", onAuthChanged);
+    window.addEventListener("storage", onStorage);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
+      window.removeEventListener("auth-changed", onAuthChanged);
+      window.removeEventListener("storage", onStorage);
     };
   }, []);
+
+  // atualiza também quando mudar rota
+  useEffect(() => {
+    checkAuthStatus();
+  }, [location.pathname]);
 
   if (isAuthenticated === null) {
     return (
@@ -59,104 +61,34 @@ function App() {
       {isAuthenticated && <Sidebar />}
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
         {isAuthenticated && <Header />}
+
         <Container component="main" sx={{ flex: 1, p: 3, bgcolor: "transparent" }}>
           <Routes>
-            <Route 
-              path="/login" 
-              element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} 
+            <Route
+              path="/login"
+              element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />}
             />
-            <Route 
-              path="/register" 
-              element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />} 
+            <Route
+              path="/register"
+              element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />}
             />
-            <Route 
-              path="/" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/licitacoes" 
-              element={
-                <ProtectedRoute>
-                  <Licitacoes />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/gcalc" 
-              element={
-                <ProtectedRoute>
-                  <GCALC />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/contratos" 
-              element={
-                <ProtectedRoute>
-                  <Contratos />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/processos" 
-              element={
-                <ProtectedRoute>
-                  <Processos />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/usuarios" 
-              element={
-                <ProtectedRoute>
-                  <Usuarios />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/relatorios" 
-              element={
-                <ProtectedRoute>
-                  <Relatorios />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/notificacoes" 
-              element={
-                <ProtectedRoute>
-                  <Notificacoes />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/cadastro-licitacao" 
-              element={
-                <ProtectedRoute>
-                  <CadastroLicitacao />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/cadastro-simples" 
-              element={<CadastroLicitacaoSimples />} 
-            />
-            <Route 
-              path="/debug" 
-              element={<TesteDebug />} 
-            />
+
+            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/licitacoes" element={<ProtectedRoute><Licitacoes /></ProtectedRoute>} />
+            <Route path="/gcalc" element={<ProtectedRoute><GCALC /></ProtectedRoute>} />
+            <Route path="/contratos" element={<ProtectedRoute><Contratos /></ProtectedRoute>} />
+            <Route path="/processos" element={<ProtectedRoute><Processos /></ProtectedRoute>} />
+            <Route path="/usuarios" element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
+            <Route path="/relatorios" element={<ProtectedRoute><Relatorios /></ProtectedRoute>} />
+            <Route path="/notificacoes" element={<ProtectedRoute><Notificacoes /></ProtectedRoute>} />
+            <Route path="/cadastro-licitacao" element={<ProtectedRoute><CadastroLicitacao /></ProtectedRoute>} />
+
+            <Route path="/cadastro-simples" element={<CadastroLicitacaoSimples />} />
+            <Route path="/debug" element={<TesteDebug />} />
+
+            {/* rota coringa */}
+            <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
           </Routes>
         </Container>
       </Box>
