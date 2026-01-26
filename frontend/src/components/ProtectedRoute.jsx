@@ -1,13 +1,16 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
-const ProtectedRoute = ({ children }) => {
+export default function ProtectedRoute({ children }) {
+  const location = useLocation();
   const token = localStorage.getItem("token");
-  
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return children;
-};
 
-export default ProtectedRoute;
+  const isValidToken =
+    token && token !== "undefined" && token !== "null" && token.trim() !== "";
+
+  if (!isValidToken) {
+    // opcional: guarda de onde veio pra voltar depois do login
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return children;
+}
