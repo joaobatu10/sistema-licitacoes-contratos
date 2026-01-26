@@ -31,7 +31,8 @@ const TesteDebug = () => {
       formData.append('password', '123456');
       
       log('📤 Enviando requisição de login...');
-      const response = await fetch('http://127.0.0.1:8000/login', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
+
         method: 'POST',
         body: formData
       });
