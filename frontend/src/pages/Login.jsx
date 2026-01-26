@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { api } from "../services/api";
@@ -15,8 +16,10 @@ import {
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -25,40 +28,30 @@ const Login = () => {
     setError("");
 
     try {
+      // ✅ FastAPI Form() espera x-www-form-urlencoded
       const form = new URLSearchParams();
-      form.append("username", username.trim());
+      form.append("username", username);
       form.append("password", password);
 
-      // ✅ seu api.js já seta Content-Type e converte pra string
-      const { data } = await api.post("/login", form);
+      const response = await api.post("/login", form); // api.js já converte/ajusta headers
 
-      if (!data?.access_token) {
-        throw new Error("Token não retornado pela API");
+      if (!response?.data?.access_token) {
+        throw new Error("Token não retornado");
       }
 
-      localStorage.setItem("token", data.access_token);
-      localStorage.setItem("user", JSON.stringify(data.user || null));
+      localStorage.setItem("token", response.data.access_token);
+      localStorage.setItem("user", JSON.stringify(response.data.user || null));
 
-      // ✅ SEM reload (pode ficar), mas teu App.jsx pode não atualizar sidebar/header.
-      // Para garantir 100%, use reload:
-      window.location.href = "/dashboard";
-      // ou: navigate("/dashboard", { replace: true });
+      // ✅ avisa o App na MESMA aba (storage não dispara na mesma aba)
+      window.dispatchEvent(new Event("auth-changed"));
 
+      navigate("/dashboard", { replace: true });
     } catch (err) {
-      const status = err?.response?.status;
-      const detail = err?.response?.data?.detail;
-
       console.error("Erro de login:", err?.response?.data || err);
-
-      if (status === 401) {
-        setError("❌ Usuário ou senha incorretos.");
-      } else if (status === 422) {
-        setError("❌ Dados inválidos (422). Confira usuário e senha.");
-      } else if (status === 404) {
-        setError("❌ Rota /login não encontrada no backend.");
-      } else {
-        setError(detail ? `❌ ${detail}` : "❌ Erro ao fazer login. Tente novamente.");
-      }
+      const msg =
+        err?.response?.data?.detail ||
+        "❌ Erro ao fazer login! Verifique suas credenciais.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -131,8 +124,7 @@ const Login = () => {
               variant="h3"
               fontWeight="bold"
               sx={{
-                background:
-                  "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
+                background: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
                 backgroundClip: "text",
                 color: "transparent",
                 display: "inline-block",
@@ -145,11 +137,7 @@ const Login = () => {
             </Typography>
             <Typography
               variant="h6"
-              sx={{
-                color: "#666",
-                fontWeight: 400,
-                letterSpacing: 1.2,
-              }}
+              sx={{ color: "#666", fontWeight: 400, letterSpacing: 1.2 }}
             >
               Sistema de Licitações e Contratos
             </Typography>
@@ -173,7 +161,26 @@ const Login = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
+              autoComplete="username"
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  backgroundColor: "rgba(255, 255, 255, 0.9)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.3)",
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.95)",
+                    borderColor: "rgba(25, 118, 210, 0.3)",
+                  },
+                  "&.Mui-focused": {
+                    backgroundColor: "rgba(255, 255, 255, 1)",
+                    borderColor: "#1976d2",
+                    boxShadow: "0 0 0 2px rgba(25, 118, 210, 0.1)",
+                  },
+                },
+              }}
             />
+
             <TextField
               label="Senha"
               type="password"
@@ -182,6 +189,24 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="current-password"
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  backgroundColor: "rgba(255, 255, 255, 0.9)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.3)",
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.95)",
+                    borderColor: "rgba(25, 118, 210, 0.3)",
+                  },
+                  "&.Mui-focused": {
+                    backgroundColor: "rgba(255, 255, 255, 1)",
+                    borderColor: "#1976d2",
+                    boxShadow: "0 0 0 2px rgba(25, 118, 210, 0.1)",
+                  },
+                },
+              }}
             />
 
             <Button
@@ -190,7 +215,26 @@ const Login = () => {
               color="primary"
               fullWidth
               disabled={loading}
-              sx={{ borderRadius: 2, py: 2, fontWeight: 600 }}
+              sx={{
+                borderRadius: 2,
+                py: 2,
+                fontSize: "1.1rem",
+                fontWeight: 600,
+                background: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
+                boxShadow: "0 8px 20px rgba(25, 118, 210, 0.3)",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+                  boxShadow: "0 12px 25px rgba(25, 118, 210, 0.4)",
+                  transform: "translateY(-2px)",
+                },
+                "&:disabled": {
+                  background:
+                    "linear-gradient(135deg, #9e9e9e 0%, #bdbdbd 100%)",
+                },
+                transition: "all 0.3s ease",
+                mt: 1,
+              }}
             >
               {loading ? (
                 <CircularProgress size={24} color="inherit" />
