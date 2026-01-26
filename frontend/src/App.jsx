@@ -29,19 +29,19 @@ function App() {
   };
 
   useEffect(() => {
-    checkAuthStatus();
+  checkAuthStatus();
 
-    const onAuthChanged = () => checkAuthStatus();
-    const onStorage = () => checkAuthStatus();
+  const handleAuthChanged = () => checkAuthStatus();
 
-    window.addEventListener("auth-changed", onAuthChanged);
-    window.addEventListener("storage", onStorage);
+  window.addEventListener("storage", handleAuthChanged);
+  window.addEventListener("auth-changed", handleAuthChanged);
 
-    return () => {
-      window.removeEventListener("auth-changed", onAuthChanged);
-      window.removeEventListener("storage", onStorage);
-    };
-  }, []);
+  return () => {
+    window.removeEventListener("storage", handleAuthChanged);
+    window.removeEventListener("auth-changed", handleAuthChanged);
+  };
+}, []);
+
 
   // atualiza também quando mudar rota
   useEffect(() => {
