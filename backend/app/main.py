@@ -27,17 +27,19 @@ app = FastAPI(title="Monitoramento de Licitações e Contratos")
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://sistema-licitacoes-contratos-mj9k-50dm90kwa.vercel.app/",
+    "https://sistema-licitacoes-contratos-mj9k-50dm90kwa.vercel.app",
 ]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,  # <- importante
+    allow_origin_regex=r"^https:\/\/.*\.vercel\.app$",
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
 
 # cria tabelas (simples – depois você pode migrar para Alembic)
 @app.on_event("startup")
