@@ -22,9 +22,6 @@ from datetime import timedelta
 
 app = FastAPI(title="Monitoramento de Licitações e Contratos")
 
-# CORS
-# CORS
-
 
 app.add_middleware(
     CORSMiddleware,
