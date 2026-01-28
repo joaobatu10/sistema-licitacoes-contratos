@@ -17,6 +17,9 @@ from datetime import timedelta
 
 app = FastAPI(title="Monitoramento de Licitações e Contratos")
 
+@app.options("/{path:path}")
+def options_handler(path: str):
+    return {}
 
 app.add_middleware(
     CORSMiddleware,
