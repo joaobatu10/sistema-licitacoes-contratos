@@ -17,21 +17,19 @@ from datetime import timedelta
 
 app = FastAPI(title="Monitoramento de Licitações e Contratos")
 
-from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        # coloque aqui o domínio do Netlify depois do primeiro deploy:
-        # "https://SEU-SITE.netlify.app",
+        "https://sistema-monitoramento.netlify.app",
+        "https://697a1dacaabd0d35d819be3b--sistema-monitoramento.netlify.app",
     ],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 
 @app.on_event("startup")
