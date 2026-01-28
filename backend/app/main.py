@@ -20,16 +20,16 @@ app = FastAPI(title="Monitoramento de Licitações e Contratos")
 
 app.add_middleware(
     CORSMiddleware,
+    allow_origin_regex=r"^https:\/\/.*\.netlify\.app$",
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "https://sistema-monitoramento.netlify.app",
-        "https://697a1dacaabd0d35d819be3b--sistema-monitoramento.netlify.app",
     ],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 @app.on_event("startup")
