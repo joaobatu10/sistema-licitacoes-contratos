@@ -17,18 +17,22 @@ from datetime import timedelta
 
 app = FastAPI(title="Monitoramento de Licitações e Contratos")
 
-# ✅ CORS (Vercel + localhost)
+from fastapi.middleware.cors import CORSMiddleware
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        # coloque aqui o domínio do Netlify depois do primeiro deploy:
+        # "https://SEU-SITE.netlify.app",
     ],
-    allow_origin_regex=r"^https:\/\/.*\.vercel\.app$",
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 
 @app.on_event("startup")
 def on_startup():
