@@ -1,34 +1,58 @@
-import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Badge } from "@mui/material";
-import { Dashboard, Description, Work, Notifications, People, Assessment, AccountBalance, GroupWork } from "@mui/icons-material";
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Badge,
+} from "@mui/material";
+import {
+  Dashboard,
+  Description,
+  Work,
+  Notifications,
+  People,
+  Assessment,
+  AccountBalance,
+  GroupWork,
+} from "@mui/icons-material";
 import { NavLink } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { api } from "../services/api";
 
 const Sidebar = () => {
   const [notificacoes, setNotificacoes] = useState(0);
 
-  const fetchNotificacoesCount = async () => {
+  const fetchNotificacoesCount = useCallback(async () => {
     try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      const url = user.id 
-        ? `http://127.0.0.1:8000/notificacoes/?usuario_id=${user.id}&apenas_nao_lidas=true`
-        : "http://127.0.0.1:8000/notificacoes/?apenas_nao_lidas=true";
-        
-      const response = await fetch(url);
-      if (response.ok) {
-        const data = await response.json();
-        setNotificacoes(data.length);
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+
+      const params = {
+        apenas_nao_lidas: true,
+      };
+
+      if (user?.id) {
+        params.usuario_id = user.id;
       }
+
+      const res = await api.get("/notificacoes/", { params });
+
+      const data = res?.data;
+      setNotificacoes(Array.isArray(data) ? data.length : 0);
     } catch (error) {
-      console.error("Erro ao buscar notificações:", error);
+      // se der 401/403, o interceptor já limpa o token
+      console.error("Erro ao buscar notificações:", error?.response?.data || error);
+      setNotificacoes(0);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchNotificacoesCount();
-    // Atualizar a cada 30 segundos
+
     const interval = setInterval(fetchNotificacoesCount, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchNotificacoesCount]);
 
   return (
     <Drawer
@@ -46,9 +70,12 @@ const Sidebar = () => {
     >
       <List>
         <ListItem>
-          <ListItemText primary="SALC" sx={{ fontSize: "30px", fontWeight: "bold", color: "#fff" }} />
+          <ListItemText
+            primary="SALC"
+            sx={{ fontSize: "30px", fontWeight: "bold", color: "#fff" }}
+          />
         </ListItem>
-        
+
         <ListItem disablePadding>
           <ListItemButton component={NavLink} to="/dashboard">
             <ListItemIcon>
