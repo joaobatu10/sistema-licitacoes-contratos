@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Form, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -21,20 +22,20 @@ app = FastAPI(title="Monitoramento de Licitações e Contratos")
 def options_handler(path: str):
     return {}
 
+def get_allowed_origins():
+    raw = os.getenv("ALLOWED_ORIGINS", "")
+    # separa por vírgula e remove espaços e "/" final
+    origins = [o.strip().rstrip("/") for o in raw.split(",") if o.strip()]
+    return origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "https://sistema-monitoramento.netlify.app",
-    ],
+    allow_origins=get_allowed_origins(),
     allow_origin_regex=r"^https:\/\/.*--sistema-monitoramento\.netlify\.app$",
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
 
 @app.on_event("startup")
 def on_startup():
