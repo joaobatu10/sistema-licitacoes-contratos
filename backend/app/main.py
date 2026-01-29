@@ -1,16 +1,14 @@
-import os
 from fastapi import FastAPI, Form, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+import os
 
 from app.db.session import engine, get_db
 from app.db import base
-
 from app.api.routes.users import router as users_router
 from app.api.routes.licitacoes import router as licitacoes_router
 from app.api.routes.contratos import router as contratos_router
 from app.api.routes.notificacoes import router as notificacoes_router
-
 from app.models.user import Usuario
 from app.core.auth import verify_password, create_access_token
 from app.schemas.user import Token
@@ -18,21 +16,11 @@ from datetime import timedelta
 
 app = FastAPI(title="Monitoramento de Licitações e Contratos")
 
-@app.options("/{path:path}")
-def options_handler(path: str):
-    return {}
-
-def get_allowed_origins():
-    raw = os.getenv("ALLOWED_ORIGINS", "")
-    # separa por vírgula e remove espaços e "/" final
-    origins = [o.strip().rstrip("/") for o in raw.split(",") if o.strip()]
-    return origins
-
+# ✅ CORS LIBERADO PRA TESTE
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=get_allowed_origins(),
-    allow_origin_regex=r"^https:\/\/.*--sistema-monitoramento\.netlify\.app$",
-    allow_credentials=False,
+    allow_origins=["*"],   # <- TEMPORÁRIO PRA FUNCIONAR
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -57,18 +45,21 @@ def login_global(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Username ou senha incorretos",
-            headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token_expires = timedelta(minutes=30)
     access_token = create_access_token(
-        data={"sub": str(user.id)}, expires_delta=access_token_expires
+        data={"sub": str(user.id)},
+        expires_delta=timedelta(minutes=30),
     )
 
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user": {"id": user.id, "username": user.username, "email": user.email},
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+        },
     }
 
 app.include_router(users_router)

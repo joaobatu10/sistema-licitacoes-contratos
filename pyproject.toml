@@ -1,0 +1,13 @@
+[tool.pylance]
+include = ["backend"]
+extraPaths = ["backend"]
+
+[tool.pyright]
+include = ["backend"]
+extraPaths = ["backend"]
+pythonVersion = "3.8"
+pythonPlatform = "Windows"
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
