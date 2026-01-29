@@ -10,19 +10,34 @@ export const api = axios.create({
   timeout: 60000, // Render pode "acordar" e demorar
 });
 
-// REQUEST interceptor
 api.interceptors.request.use(
   (config) => {
     config.headers = config.headers || {};
 
+    // garante que axios aceite JSON
+    if (!config.headers.Accept) config.headers.Accept = "application/json";
+
+    // pega o path com segurança (funciona mesmo se config.url for absoluta)
     const url = config.url || "";
+    const path = url.startsWith("http")
+      ? new URL(url).pathname
+      : url.startsWith("/")
+        ? url
+        : `/${url}`;
 
     // ✅ NÃO enviar token no login/register
-    const isAuthRoute = url.includes("/login") || url.includes("/register");
+    const isAuthRoute =
+      path === "/login" ||
+      path.startsWith("/login/") ||
+      path === "/register" ||
+      path.startsWith("/register/");
 
     if (!isAuthRoute) {
       const token = localStorage.getItem("token");
       if (token) config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      // se por algum motivo existir, remove
+      delete config.headers.Authorization;
     }
 
     // ✅ URLSearchParams -> x-www-form-urlencoded
@@ -39,7 +54,11 @@ api.interceptors.request.use(
     }
 
     // ✅ objeto normal -> JSON
-    if (config.data && typeof config.data === "object" && !config.headers["Content-Type"]) {
+    if (
+      config.data &&
+      typeof config.data === "object" &&
+      !config.headers["Content-Type"]
+    ) {
       config.headers["Content-Type"] = "application/json";
     }
 
@@ -48,7 +67,6 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// RESPONSE interceptor
 api.interceptors.response.use(
   (response) => response,
   (error) => {

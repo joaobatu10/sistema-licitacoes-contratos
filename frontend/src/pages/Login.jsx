@@ -25,7 +25,7 @@ const Login = () => {
     setError("");
 
     try {
-      // limpa token antigo antes do login (evita header Authorization no /login)
+      // limpa token antigo antes do login
       localStorage.removeItem("token");
       localStorage.removeItem("user");
 
@@ -33,7 +33,9 @@ const Login = () => {
       form.append("username", username.trim());
       form.append("password", password);
 
-      const { data } = await api.post("/login", form);
+      const response = await api.post("/login", form);
+
+      const data = response?.data;
 
       if (!data?.access_token) {
         throw new Error("Token não retornado.");
@@ -139,7 +141,7 @@ const Login = () => {
               variant="h6"
               sx={{ color: "#666", fontWeight: 400, letterSpacing: 1.2 }}
             >
-              Sistema de Licitações e Contratos
+              Sistema de Monitoramento de Licitações e Contratos
             </Typography>
           </Box>
 
@@ -157,6 +159,7 @@ const Login = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
+              autoComplete="username"
             />
 
             <TextField
@@ -167,6 +170,7 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="current-password"
             />
 
             <Button type="submit" variant="contained" fullWidth disabled={loading}>
