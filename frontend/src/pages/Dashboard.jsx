@@ -10,7 +10,6 @@ import {
   Chip,
   Stack,
   Skeleton,
-  Divider,
   CardActionArea,
 } from "@mui/material";
 import AssessmentIcon from "@mui/icons-material/Assessment";
@@ -18,8 +17,8 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import AddIcon from "@mui/icons-material/Add";
-import axios from "axios";
 import dayjs from "dayjs";
+import { api } from "../services/api";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -29,11 +28,6 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
-
-// ======= helpers
-const api = axios.create({
-  baseURL: "http://127.0.0.1:8000", // ajuste se necessário
-});
 
 // Formatação monetária brasileira
 const formatCurrency = (value) => {
@@ -181,8 +175,10 @@ export default function Dashboard() {
           total: 0,
         }));
         licitacoes.forEach((l) => {
-          const d = dayjs(l.data_abertura);
-          if (d.year() === year) counts[d.month()].total += 1;
+        const d = dayjs(l.data_abertura);
+        if (d.isValid() && d.year() === year) {
+          counts[d.month()].total += 1;
+        }
         });
         setSerie(counts);
 
@@ -192,8 +188,10 @@ export default function Dashboard() {
           total: 0,
         }));
         contratos.forEach((c) => {
-          const d = dayjs(c.data_assinatura);
-          if (d.year() === year) contractCounts[d.month()].total += 1;
+        const d = dayjs(c.data_assinatura || c.data_inicio);
+        if (d.isValid() && d.year() === year) {
+          contractCounts[d.month()].total += 1;
+        }
         });
         setSerieContratos(contractCounts);
       } catch (e) {
@@ -316,7 +314,7 @@ export default function Dashboard() {
               {loading ? (
                 <Skeleton variant="rounded" height={280} />
               ) : (
-                <Box sx={{ height: 300 }}>
+                <Box sx={{ height: 300 }} translate="no" className="notranslate">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart 
                       data={serie}
@@ -371,28 +369,25 @@ export default function Dashboard() {
                         cursor={{ stroke: '#1976d2', strokeWidth: 2, strokeDasharray: '5 5' }}
                       />
                       <Area
-                        type="monotone"
-                        dataKey="total"
-                        stroke="url(#strokeGradient)"
-                        strokeWidth={3}
-                        fill="url(#colorTotal)"
-                        dot={{ 
-                          fill: '#1976d2', 
-                          stroke: '#fff', 
-                          strokeWidth: 2, 
-                          r: 5,
-                          style: { filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }
-                        }}
-                        activeDot={{ 
-                          r: 8, 
-                          fill: '#1976d2',
-                          stroke: '#fff',
-                          strokeWidth: 3,
-                          style: { filter: 'drop-shadow(0 2px 8px rgba(25,118,210,0.4))' }
-                        }}
-                        animationDuration={2000}
-                        animationEasing="ease-out"
-                      />
+                          type="monotone"
+                          dataKey="total"
+                          stroke="url(#strokeGradient)"
+                          strokeWidth={3}
+                          fill="url(#colorTotal)"
+                          isAnimationActive={false}
+                          dot={{
+                            fill: "#1976d2",
+                            stroke: "#fff",
+                            strokeWidth: 2,
+                            r: 5,
+                          }}
+                          activeDot={{
+                            r: 8,
+                            fill: "#1976d2",
+                            stroke: "#fff",
+                            strokeWidth: 3,
+                          }}
+                        />
                     </AreaChart>
                   </ResponsiveContainer>
                 </Box>
@@ -449,7 +444,7 @@ export default function Dashboard() {
               {loading ? (
                 <Skeleton variant="rounded" height={280} />
               ) : (
-                <Box sx={{ height: 300 }}>
+                <Box sx={{ height: 300 }} translate="no" className="notranslate">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart 
                       data={serieContratos}
@@ -509,22 +504,19 @@ export default function Dashboard() {
                         stroke="url(#strokeGradientContratos)"
                         strokeWidth={3}
                         fill="url(#colorTotalContratos)"
-                        dot={{ 
-                          fill: '#2e7d32', 
-                          stroke: '#fff', 
-                          strokeWidth: 2, 
+                        isAnimationActive={false}
+                        dot={{
+                          fill: "#2e7d32",
+                          stroke: "#fff",
+                          strokeWidth: 2,
                           r: 5,
-                          style: { filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }
                         }}
-                        activeDot={{ 
-                          r: 8, 
-                          fill: '#2e7d32',
-                          stroke: '#fff',
+                        activeDot={{
+                          r: 8,
+                          fill: "#2e7d32",
+                          stroke: "#fff",
                           strokeWidth: 3,
-                          style: { filter: 'drop-shadow(0 2px 8px rgba(46,125,50,0.4))' }
                         }}
-                        animationDuration={2000}
-                        animationEasing="ease-out"
                       />
                     </AreaChart>
                   </ResponsiveContainer>

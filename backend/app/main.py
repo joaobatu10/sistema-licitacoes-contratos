@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Form, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-import os
+from datetime import timedelta
+from pydantic import BaseModel
 
 from app.db.session import engine, get_db
 from app.db import base
@@ -11,19 +12,31 @@ from app.api.routes.contratos import router as contratos_router
 from app.api.routes.notificacoes import router as notificacoes_router
 from app.models.user import Usuario
 from app.core.auth import verify_password, create_access_token
-from app.schemas.user import Token
-from datetime import timedelta
 
-app = FastAPI(title="Monitoramento de Licitações e Contratos")
+app = FastAPI(title="Sistema de Monitoramento de Licitações e Contratos")
 
-# ✅ CORS LIBERADO PRA TESTE
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # <- TEMPORÁRIO PRA FUNCIONAR
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+class UserLoginOut(BaseModel):
+    id: int
+    username: str
+    email: str
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserLoginOut
 
 @app.on_event("startup")
 def on_startup():
@@ -33,7 +46,11 @@ def on_startup():
 def root():
     return {"message": "API rodando"}
 
-@app.post("/login", response_model=Token)
+@app.get("/health")
+def health():
+    return {"ok": True}
+
+@app.post("/login", response_model=LoginResponse)
 def login_global(
     username: str = Form(...),
     password: str = Form(...),

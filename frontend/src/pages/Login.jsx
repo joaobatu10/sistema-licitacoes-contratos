@@ -33,8 +33,11 @@ const Login = () => {
       form.append("username", username.trim());
       form.append("password", password);
 
-      const response = await api.post("/login", form);
-
+      const response = await api.post("/login", form, {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+  },
+});
       const data = response?.data;
 
       if (!data?.access_token) {
@@ -135,7 +138,7 @@ const Login = () => {
                 mb: 1,
               }}
             >
-              🏢 SALC
+              SALC
             </Typography>
             <Typography
               variant="h6"
