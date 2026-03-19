@@ -14,7 +14,6 @@ import Usuarios from "./pages/Usuarios";
 import Notificacoes from "./pages/Notificacoes";
 import Relatorios from "./pages/Relatorios";
 import CadastroLicitacao from "./pages/CadastroLicitacao";
-import CadastroLicitacaoSimples from "./pages/CadastroLicitacaoSimples";
 import TesteDebug from "./pages/TesteDebug";
 import { useEffect, useState } from "react";
 
@@ -84,7 +83,6 @@ function App() {
             <Route path="/notificacoes" element={<ProtectedRoute><Notificacoes /></ProtectedRoute>} />
             <Route path="/cadastro-licitacao" element={<ProtectedRoute><CadastroLicitacao /></ProtectedRoute>} />
 
-            <Route path="/cadastro-simples" element={<CadastroLicitacaoSimples />} />
             <Route path="/debug" element={<TesteDebug />} />
 
             {/* rota coringa */}
