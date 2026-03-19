@@ -18,7 +18,7 @@ app = FastAPI(title="Sistema de Monitoramento de Licitações e Contratos")
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://nome-do-teu-projeto.vercel.app",
+    "https://sistema-licitacoes-contratos-mj9k.vercel.app",
 ]
 
 app.add_middleware(
