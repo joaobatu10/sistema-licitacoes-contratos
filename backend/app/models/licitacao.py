@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Date, Boolean
 from app.db.base import Base
+from sqlalchemy.orm import relationship
 
 class Licitacao(Base):
     __tablename__ = "licitacoes"
@@ -19,3 +20,5 @@ class Licitacao(Base):
     quartel_27gac = Column(Boolean, default=False)
     quartel_29gacap = Column(Boolean, default=False)
     quartel_easa = Column(Boolean, default=False)
+
+    contratos = relationship("Contrato", back_populates="licitacao")
