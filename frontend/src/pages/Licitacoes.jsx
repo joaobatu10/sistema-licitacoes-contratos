@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { 
-  Box, 
-  CircularProgress, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableRow, 
-  Typography, 
-  TextField, 
-  Button, 
+import {
+  Box,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Typography,
+  TextField,
+  Button,
   IconButton,
   Dialog,
   DialogActions,
@@ -40,6 +40,7 @@ const Licitacoes = () => {
   const [highlightedLicitacao, setHighlightedLicitacao] = useState(null);
   const [modalidadeFilter, setModalidadeFilter] = useState("");
   const location = useLocation();
+
   const [formData, setFormData] = useState({
     numero_processo: "",
     modalidade: "",
@@ -51,52 +52,73 @@ const Licitacoes = () => {
     is_gcalc: false,
     quartel_ad3: false,
     quartel_27gac: false,
+    quartel_29gacap: false,
     quartel_easa: false,
   });
 
-  // Modalidades disponíveis
   const modalidades = [
     "Pregão",
-    "Dispensa Eletrônica", 
+    "Dispensa Eletrônica",
     "Dispensa Direta",
     "Inexigibilidade"
   ];
+
+  const normalizarQuartel = (valor) => {
+    const texto = String(valor || "").toLowerCase().trim();
+
+    if (texto.includes("29") && texto.includes("gac")) return "29º GAC AP";
+    if (texto.includes("27") && texto.includes("gac")) return "27 GAC";
+    if (texto.includes("ad/3") || texto.includes("ad3")) return "AD/3";
+    if (texto.includes("easa")) return "EASA";
+
+    return String(valor || "").trim();
+  };
+
+  const sanitizeGcalcData = (data) => {
+    const dados = { ...data };
+    const orgao = normalizarQuartel(dados.orgao_responsavel);
+
+    if (!dados.is_gcalc) {
+      dados.quartel_ad3 = false;
+      dados.quartel_27gac = false;
+      dados.quartel_29gacap = false;
+      dados.quartel_easa = false;
+      return dados;
+    }
+
+    if (orgao === "AD/3") dados.quartel_ad3 = false;
+    if (orgao === "27 GAC") dados.quartel_27gac = false;
+    if (orgao === "29º GAC AP") dados.quartel_29gacap = false;
+    if (orgao === "EASA") dados.quartel_easa = false;
+
+    return dados;
+  };
 
   useEffect(() => {
     const fetchLicitacoes = async () => {
       try {
         console.log("🔍 Buscando licitações...");
-        
-        // Usar api.js que tem os interceptors configurados
         const response = await api.get("/licitacoes/");
-        
         console.log("✅ Licitações carregadas:", response.data);
-        
+
         setLicitacoes(response.data);
         setFilteredLicitacoes(response.data);
-        
-        // Verificar se há um ID na URL para destacar
+
         const urlParams = new URLSearchParams(location.search);
-        const licitacaoId = urlParams.get('id');
+        const licitacaoId = urlParams.get("id");
+
         if (licitacaoId) {
           setHighlightedLicitacao(parseInt(licitacaoId));
-          // Remover o destaque após 3 segundos
           setTimeout(() => {
             setHighlightedLicitacao(null);
           }, 3000);
         }
       } catch (error) {
         console.error("❌ Erro ao buscar licitações:", error);
-        
-        // Tratamento específico para diferentes tipos de erro
+
         if (error.response?.status === 401) {
-          console.log("Usuário não autenticado, redirecionando para login...");
-          localStorage.removeItem('token');
-          window.location.href = '/login';
-        } else if (error.response?.status === 403) {
-          console.log("Usuário sem permissão para visualizar licitações");
-        } else {
-          console.log("Erro de conexão ou servidor");
+          localStorage.removeItem("token");
+          window.location.href = "/login";
         }
       } finally {
         setLoading(false);
@@ -106,12 +128,11 @@ const Licitacoes = () => {
     fetchLicitacoes();
   }, [location.search]);
 
-  // Filtrar licitações por modalidade
   useEffect(() => {
     if (modalidadeFilter === "") {
       setFilteredLicitacoes(licitacoes);
     } else {
-      const filtered = licitacoes.filter(licitacao => 
+      const filtered = licitacoes.filter((licitacao) =>
         licitacao.modalidade?.toLowerCase().includes(modalidadeFilter.toLowerCase())
       );
       setFilteredLicitacoes(filtered);
@@ -120,8 +141,20 @@ const Licitacoes = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    const newValue = type === 'checkbox' ? checked : value;
-    setFormData({ ...formData, [name]: newValue });
+    const newValue = type === "checkbox" ? checked : value;
+
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: newValue };
+
+      if (name === "is_gcalc" && !checked) {
+        updated.quartel_ad3 = false;
+        updated.quartel_27gac = false;
+        updated.quartel_29gacap = false;
+        updated.quartel_easa = false;
+      }
+
+      return updated;
+    });
   };
 
   const handleModalidadeFilterChange = (event) => {
@@ -132,55 +165,62 @@ const Licitacoes = () => {
     setModalidadeFilter("");
   };
 
+  const resetForm = () => {
+    setFormData({
+      numero_processo: "",
+      modalidade: "",
+      objeto: "",
+      orgao_responsavel: "",
+      data_abertura: "",
+      data_encerramento: "",
+      status: "",
+      is_gcalc: false,
+      quartel_ad3: false,
+      quartel_27gac: false,
+      quartel_29gacap: false,
+      quartel_easa: false,
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Verificar se usuário está logado
-    const token = localStorage.getItem('token');
+
+    const token = localStorage.getItem("token");
     if (!token) {
       alert("Você precisa estar logado para cadastrar licitações. Redirecionando para login...");
-      window.location.href = '/login';
+      window.location.href = "/login";
       return;
     }
-    
+
     try {
+      const payload = sanitizeGcalcData(formData);
+
       console.log("🚀 Enviando licitação via api.js...");
-      console.log("📋 Dados a enviar:", formData);
-      
-      // Usar api.js que tem os interceptors e token automático
-      const response = await api.post("/licitacoes/", formData);
-      
+      console.log("📋 Dados a enviar:", payload);
+
+      const response = await api.post("/licitacoes/", payload);
+
       console.log("✅ Licitação criada com sucesso:", response.data);
-      
+
       const newLicitacao = response.data;
-      setLicitacoes([...licitacoes, newLicitacao]); // Atualiza a lista com a nova licitação
-      setFormData({
-        numero_processo: "",
-        modalidade: "",
-        objeto: "",
-        orgao_responsavel: "",
-        data_abertura: "",
-        data_encerramento: "",
-        status: "",
-        is_gcalc: false,
-        quartel_ad3: false,
-        quartel_27gac: false,
-        quartel_easa: false,
-      }); // Limpa o formulário
-      
+      const updated = [...licitacoes, newLicitacao];
+
+      setLicitacoes(updated);
+      setFilteredLicitacoes(updated);
+      resetForm();
+
       alert("Licitação cadastrada com sucesso!");
-      
     } catch (error) {
       console.error("❌ Erro ao cadastrar licitação:", error);
-      
+
       if (error.response?.status === 403) {
         alert("Erro: Você não tem permissão de administrador para cadastrar licitações.");
       } else if (error.response?.status === 401) {
         alert("Erro: Sessão expirada. Faça login novamente.");
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+        localStorage.removeItem("token");
+        window.location.href = "/login";
       } else if (error.response?.status === 422) {
-        alert(`Erro de validação: ${JSON.stringify(error.response?.data?.detail || 'Dados inválidos')}`);
+        alert(`Erro de validação: ${JSON.stringify(error.response?.data?.detail || "Dados inválidos")}`);
       } else {
         alert("Erro ao cadastrar licitação. Verifique os dados e tente novamente.");
       }
@@ -193,19 +233,17 @@ const Licitacoes = () => {
 
   const handleDeleteConfirm = async () => {
     const { licitacao } = deleteDialog;
-    try {
-      const response = await api.delete(`/licitacoes/${licitacao.id_licitacao}`);
 
-      // Atualiza a lista removendo a licitação deletada
-      setLicitacoes(licitacoes.filter(l => l.id_licitacao !== licitacao.id_licitacao));
+    try {
+      await api.delete(`/licitacoes/${licitacao.id_licitacao}`);
+
+      const updated = licitacoes.filter((l) => l.id_licitacao !== licitacao.id_licitacao);
+      setLicitacoes(updated);
+      setFilteredLicitacoes(updated);
       setDeleteDialog({ open: false, licitacao: null });
-      
-      // Mostrar mensagem de sucesso
-      console.log("Licitação deletada com sucesso!");
     } catch (error) {
       console.error("Erro ao deletar licitação:", error);
-      
-      // Mostrar mensagem de erro específica
+
       if (error.response?.status === 403) {
         alert("Erro: Apenas administradores podem deletar licitações!");
       } else if (error.response?.status === 401) {
@@ -220,10 +258,9 @@ const Licitacoes = () => {
     setDeleteDialog({ open: false, licitacao: null });
   };
 
-  // Funções de edição
   const handleEditClick = (licitacao) => {
     setEditDialog({ open: true, licitacao });
-    // Preencher o formulário com os dados da licitação
+
     setFormData({
       numero_processo: licitacao.numero_processo || "",
       modalidade: licitacao.modalidade || "",
@@ -235,64 +272,52 @@ const Licitacoes = () => {
       is_gcalc: licitacao.is_gcalc || false,
       quartel_ad3: licitacao.quartel_ad3 || false,
       quartel_27gac: licitacao.quartel_27gac || false,
+      quartel_29gacap: licitacao.quartel_29gacap || false,
       quartel_easa: licitacao.quartel_easa || false,
     });
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    
+
     const { licitacao } = editDialog;
     if (!licitacao) return;
-    
-    const token = localStorage.getItem('token');
+
+    const token = localStorage.getItem("token");
     if (!token) {
       alert("Você precisa estar logado para editar licitações.");
       return;
     }
-    
+
     try {
+      const payload = sanitizeGcalcData(formData);
+
       console.log("🔄 Editando licitação...");
-      console.log("📋 Dados a atualizar:", formData);
-      
-      const response = await api.put(`/licitacoes/${licitacao.id_licitacao}`, formData);
-      
+      console.log("📋 Dados a atualizar:", payload);
+
+      const response = await api.put(`/licitacoes/${licitacao.id_licitacao}`, payload);
+
       console.log("✅ Licitação editada com sucesso:", response.data);
-      
-      // Atualizar a lista local
-      const updatedLicitacoes = licitacoes.map(l => 
+
+      const updatedLicitacoes = licitacoes.map((l) =>
         l.id_licitacao === licitacao.id_licitacao ? response.data : l
       );
+
       setLicitacoes(updatedLicitacoes);
       setFilteredLicitacoes(updatedLicitacoes);
-      
-      // Fechar dialog e limpar formulário
       setEditDialog({ open: false, licitacao: null });
-      setFormData({
-        numero_processo: "",
-        modalidade: "",
-        objeto: "",
-        orgao_responsavel: "",
-        data_abertura: "",
-        data_encerramento: "",
-        status: "",
-        is_gcalc: false,
-        quartel_ad3: false,
-        quartel_27gac: false,
-        quartel_easa: false,
-      });
-      
+      resetForm();
+
       alert("Licitação editada com sucesso!");
-      
     } catch (error) {
       console.error("❌ Erro ao editar licitação:", error);
-      
+
       if (error.response?.status === 403) {
         alert("Erro: Você não tem permissão para editar licitações.");
       } else if (error.response?.status === 401) {
         alert("Erro: Sessão expirada. Faça login novamente.");
       } else if (error.response?.status === 422) {
-        alert(`Erro de validação: ${JSON.stringify(error.response?.data?.detail || 'Dados inválidos')}`);
+        alert(`Erro de validação: ${JSON.stringify(error.response?.data?.detail || "Dados inválidos")}`);
       } else {
         alert("Erro ao editar licitação. Tente novamente.");
       }
@@ -301,20 +326,7 @@ const Licitacoes = () => {
 
   const handleEditCancel = () => {
     setEditDialog({ open: false, licitacao: null });
-    // Limpar formulário
-    setFormData({
-      numero_processo: "",
-      modalidade: "",
-      objeto: "",
-      orgao_responsavel: "",
-      data_abertura: "",
-      data_encerramento: "",
-      status: "",
-      is_gcalc: false,
-      quartel_ad3: false,
-      quartel_27gac: false,
-      quartel_easa: false,
-    });
+    resetForm();
   };
 
   if (loading) {
@@ -331,7 +343,6 @@ const Licitacoes = () => {
         Licitações
       </Typography>
 
-      {/* Formulário para cadastro */}
       <Box component="form" onSubmit={handleSubmit} sx={{ mb: 4 }}>
         <TextField
           label="Número do Processo"
@@ -341,6 +352,7 @@ const Licitacoes = () => {
           fullWidth
           margin="normal"
         />
+
         <FormControl fullWidth margin="normal">
           <InputLabel>Modalidade</InputLabel>
           <Select
@@ -356,6 +368,7 @@ const Licitacoes = () => {
             ))}
           </Select>
         </FormControl>
+
         <TextField
           label="Objeto"
           name="objeto"
@@ -364,6 +377,7 @@ const Licitacoes = () => {
           fullWidth
           margin="normal"
         />
+
         <TextField
           label="Órgão Responsável"
           name="orgao_responsavel"
@@ -372,6 +386,7 @@ const Licitacoes = () => {
           fullWidth
           margin="normal"
         />
+
         <TextField
           label="Data de Abertura"
           name="data_abertura"
@@ -380,10 +395,9 @@ const Licitacoes = () => {
           onChange={handleInputChange}
           fullWidth
           margin="normal"
-          InputLabelProps={{
-            shrink: true,
-          }}
+          InputLabelProps={{ shrink: true }}
         />
+
         <TextField
           label="Data de Encerramento"
           name="data_encerramento"
@@ -392,10 +406,9 @@ const Licitacoes = () => {
           onChange={handleInputChange}
           fullWidth
           margin="normal"
-          InputLabelProps={{
-            shrink: true,
-          }}
+          InputLabelProps={{ shrink: true }}
         />
+
         <FormControl fullWidth margin="normal" required>
           <InputLabel>Status</InputLabel>
           <Select
@@ -411,12 +424,13 @@ const Licitacoes = () => {
             <MenuItem value="Cancelado">Cancelado</MenuItem>
           </Select>
         </FormControl>
-        
-        {/* Seção GCALC */}
+
         <Divider sx={{ my: 3 }}>
-          <Typography variant="h6" color="primary">GCALC - Participação de Quartéis</Typography>
+          <Typography variant="h6" color="primary">
+            GCALC - Participação de Quartéis
+          </Typography>
         </Divider>
-        
+
         <FormControlLabel
           control={
             <Checkbox
@@ -428,12 +442,13 @@ const Licitacoes = () => {
           }
           label="Esta licitação é GCALC (outros quartéis participam)"
         />
-        
+
         {formData.is_gcalc && (
           <Box sx={{ ml: 4, mt: 2 }}>
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
               Quartéis participantes:
             </Typography>
+
             <FormControlLabel
               control={
                 <Checkbox
@@ -445,6 +460,7 @@ const Licitacoes = () => {
               }
               label="AD/3"
             />
+
             <FormControlLabel
               control={
                 <Checkbox
@@ -456,6 +472,19 @@ const Licitacoes = () => {
               }
               label="27 GAC"
             />
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={formData.quartel_29gacap}
+                  onChange={handleInputChange}
+                  name="quartel_29gacap"
+                  color="primary"
+                />
+              }
+              label="29º GAC AP"
+            />
+
             <FormControlLabel
               control={
                 <Checkbox
@@ -469,13 +498,12 @@ const Licitacoes = () => {
             />
           </Box>
         )}
-        
+
         <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
           Cadastrar Licitação
         </Button>
       </Box>
 
-      {/* Seção de Filtros */}
       <Box sx={{ mb: 3, p: 2, border: 1, borderColor: 'divider', borderRadius: 2, backgroundColor: '#f8f9fa' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <FilterListIcon sx={{ mr: 1, color: 'primary.main' }} />
@@ -483,7 +511,7 @@ const Licitacoes = () => {
             Filtros
           </Typography>
         </Box>
-        
+
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
           <FormControl sx={{ minWidth: 200 }}>
             <InputLabel>Filtrar por Modalidade</InputLabel>
@@ -511,14 +539,13 @@ const Licitacoes = () => {
               variant="outlined"
             />
           )}
-          
+
           <Typography variant="body2" color="textSecondary">
             {filteredLicitacoes.length} de {licitacoes.length} licitações
           </Typography>
         </Box>
       </Box>
 
-      {/* Tabela de licitações */}
       <Table>
         <TableHead>
           <TableRow>
@@ -535,17 +562,19 @@ const Licitacoes = () => {
         </TableHead>
         <TableBody>
           {filteredLicitacoes.map((licitacao) => (
-            <TableRow 
+            <TableRow
               key={licitacao.id_licitacao}
               sx={{
-                backgroundColor: highlightedLicitacao === licitacao.id_licitacao 
-                  ? 'rgba(25, 118, 210, 0.1)' 
-                  : 'inherit',
+                backgroundColor:
+                  highlightedLicitacao === licitacao.id_licitacao
+                    ? 'rgba(25, 118, 210, 0.1)'
+                    : 'inherit',
                 transition: 'background-color 0.3s ease',
                 '&:hover': {
-                  backgroundColor: highlightedLicitacao === licitacao.id_licitacao 
-                    ? 'rgba(25, 118, 210, 0.15)' 
-                    : 'rgba(0, 0, 0, 0.04)'
+                  backgroundColor:
+                    highlightedLicitacao === licitacao.id_licitacao
+                      ? 'rgba(25, 118, 210, 0.15)'
+                      : 'rgba(0, 0, 0, 0.04)'
                 }
               }}
             >
@@ -557,7 +586,7 @@ const Licitacoes = () => {
               <TableCell>{licitacao.data_abertura}</TableCell>
               <TableCell>{licitacao.data_encerramento || "N/A"}</TableCell>
               <TableCell>
-                <Chip 
+                <Chip
                   label={licitacao.status || 'Não definido'}
                   size="small"
                   color={
@@ -575,16 +604,16 @@ const Licitacoes = () => {
                 />
               </TableCell>
               <TableCell>
-                <IconButton 
-                  color="primary" 
+                <IconButton
+                  color="primary"
                   onClick={() => handleEditClick(licitacao)}
                   title="Editar licitação"
                   sx={{ mr: 1 }}
                 >
                   <EditIcon />
                 </IconButton>
-                <IconButton 
-                  color="error" 
+                <IconButton
+                  color="error"
                   onClick={() => handleDeleteClick(licitacao)}
                   title="Deletar licitação"
                 >
@@ -596,7 +625,6 @@ const Licitacoes = () => {
         </TableBody>
       </Table>
 
-      {/* Modal de edição */}
       <Dialog
         open={editDialog.open}
         onClose={handleEditCancel}
@@ -683,12 +711,13 @@ const Licitacoes = () => {
                 <MenuItem value="Cancelado">Cancelado</MenuItem>
               </Select>
             </FormControl>
-            
-            {/* Seção GCALC no dialog de edição */}
+
             <Divider sx={{ my: 3 }}>
-              <Typography variant="h6" color="primary">GCALC - Participação de Quartéis</Typography>
+              <Typography variant="h6" color="primary">
+                GCALC - Participação de Quartéis
+              </Typography>
             </Divider>
-            
+
             <FormControlLabel
               control={
                 <Checkbox
@@ -700,12 +729,13 @@ const Licitacoes = () => {
               }
               label="Esta licitação é GCALC (outros quartéis participam)"
             />
-            
+
             {formData.is_gcalc && (
               <Box sx={{ ml: 4, mt: 2 }}>
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>
                   Quartéis participantes:
                 </Typography>
+
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -717,6 +747,7 @@ const Licitacoes = () => {
                   }
                   label="AD/3"
                 />
+
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -728,6 +759,19 @@ const Licitacoes = () => {
                   }
                   label="27 GAC"
                 />
+
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.quartel_29gacap}
+                      onChange={handleInputChange}
+                      name="quartel_29gacap"
+                      color="primary"
+                    />
+                  }
+                  label="29º GAC AP"
+                />
+
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -753,7 +797,6 @@ const Licitacoes = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Modal de confirmação de delete */}
       <Dialog
         open={deleteDialog.open}
         onClose={handleDeleteCancel}

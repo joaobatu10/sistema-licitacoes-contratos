@@ -1,95 +1,90 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.licitacao import Licitacao
-from app.schemas.licitacao import LicitacaoCreate
-from app.core.auth import require_admin, require_read_access
-from app.models.user import Usuario
+from app.schemas.licitacao import LicitacaoCreate, LicitacaoUpdate
 
 router = APIRouter(prefix="/licitacoes", tags=["Licitações"])
 
+def normalizar_quartel(valor: str) -> str:
+    texto = (valor or "").lower().strip()
+
+    if "29" in texto and "gac" in texto:
+        return "29º GAC AP"
+    if "27" in texto and "gac" in texto:
+        return "27 GAC"
+    if "ad/3" in texto or "ad3" in texto:
+        return "AD/3"
+    if "easa" in texto:
+        return "EASA"
+
+    return valor or ""
+
+def sanitizar_gcalc(dados: dict) -> dict:
+    dados = dict(dados)
+
+    if not dados.get("is_gcalc", False):
+        dados["quartel_ad3"] = False
+        dados["quartel_27gac"] = False
+        dados["quartel_29gacap"] = False
+        dados["quartel_easa"] = False
+        return dados
+
+    orgao = normalizar_quartel(dados.get("orgao_responsavel", ""))
+
+    if orgao == "AD/3":
+        dados["quartel_ad3"] = False
+    elif orgao == "27 GAC":
+        dados["quartel_27gac"] = False
+    elif orgao == "29º GAC AP":
+        dados["quartel_29gacap"] = False
+    elif orgao == "EASA":
+        dados["quartel_easa"] = False
+
+    return dados
+
 @router.get("/")
 def listar(db: Session = Depends(get_db)):
-    """Lista licitações - TEMPORARIAMENTE sem autenticação para debug"""
     return db.query(Licitacao).all()
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
-def criar(
-    payload: LicitacaoCreate, 
-    db: Session = Depends(get_db),
-    admin_user: Usuario = Depends(require_admin)
-):
-    """Cria nova licitação - APENAS ADMINISTRADORES"""
-    print(f"🔍 DEBUG POST /licitacoes/:")
-    print(f"   - Payload: {payload}")
-    print(f"   - Admin user: {admin_user.username if admin_user else 'None'}")
-    print(f"   - Admin role: {admin_user.role if admin_user else 'None'}")
-    
-    if db.query(Licitacao).filter(Licitacao.numero_processo == payload.numero_processo).first():
-        raise HTTPException(409, "Número de processo já cadastrado")
-    nova = Licitacao(**payload.model_dump())
+@router.get("/{id_licitacao}")
+def obter(id_licitacao: int, db: Session = Depends(get_db)):
+    licitacao = db.query(Licitacao).filter(Licitacao.id_licitacao == id_licitacao).first()
+    if not licitacao:
+        raise HTTPException(status_code=404, detail="Licitação não encontrada")
+    return licitacao
+
+@router.post("/")
+def criar(payload: LicitacaoCreate, db: Session = Depends(get_db)):
+    dados = sanitizar_gcalc(payload.model_dump())
+
+    nova = Licitacao(**dados)
     db.add(nova)
     db.commit()
     db.refresh(nova)
-    
-    print(f"✅ Licitação criada com ID: {nova.id_licitacao}")
     return nova
 
-@router.get("/{id_licitacao}")
-def obter(
-    id_licitacao: int, 
-    db: Session = Depends(get_db)
-):
-    """Obtém licitação específica - TEMPORARIAMENTE sem autenticação para debug"""
-    lic = db.query(Licitacao).get(id_licitacao)
-    if not lic:
-        raise HTTPException(404, "Licitação não encontrada")
-    return lic
-
 @router.put("/{id_licitacao}")
-def atualizar(
-    id_licitacao: int,
-    payload: LicitacaoCreate,
-    db: Session = Depends(get_db),
-    admin_user: Usuario = Depends(require_admin)
-):
-    """Atualiza licitação existente - APENAS ADMINISTRADORES"""
-    print(f"🔄 DEBUG PUT /licitacoes/{id_licitacao}:")
-    print(f"   - Payload: {payload}")
-    print(f"   - Admin user: {admin_user.username if admin_user else 'None'}")
-    
-    # Buscar licitação existente
+def atualizar(id_licitacao: int, payload: LicitacaoUpdate, db: Session = Depends(get_db)):
     licitacao = db.query(Licitacao).filter(Licitacao.id_licitacao == id_licitacao).first()
     if not licitacao:
-        raise HTTPException(404, "Licitação não encontrada")
-    
-    # Verificar se o número do processo já existe em outra licitação
-    existing = db.query(Licitacao).filter(
-        Licitacao.numero_processo == payload.numero_processo,
-        Licitacao.id_licitacao != id_licitacao
-    ).first()
-    if existing:
-        raise HTTPException(409, "Número de processo já cadastrado em outra licitação")
-    
-    # Atualizar campos
-    for field, value in payload.model_dump().items():
-        setattr(licitacao, field, value)
-    
+        raise HTTPException(status_code=404, detail="Licitação não encontrada")
+
+    dados = sanitizar_gcalc(payload.model_dump())
+
+    for campo, valor in dados.items():
+        setattr(licitacao, campo, valor)
+
     db.commit()
     db.refresh(licitacao)
-    
-    print(f"✅ Licitação {id_licitacao} atualizada com sucesso")
     return licitacao
 
-@router.delete("/{id_licitacao}", status_code=status.HTTP_204_NO_CONTENT)
-def excluir(
-    id_licitacao: int, 
-    db: Session = Depends(get_db),
-    admin_user: Usuario = Depends(require_admin)
-):
-    """Exclui licitação - APENAS ADMINISTRADORES"""
-    lic = db.query(Licitacao).get(id_licitacao)
-    if not lic:
-        raise HTTPException(404, "Licitação não encontrada")
-    db.delete(lic)
+@router.delete("/{id_licitacao}")
+def excluir(id_licitacao: int, db: Session = Depends(get_db)):
+    licitacao = db.query(Licitacao).filter(Licitacao.id_licitacao == id_licitacao).first()
+    if not licitacao:
+        raise HTTPException(status_code=404, detail="Licitação não encontrada")
+
+    db.delete(licitacao)
     db.commit()
+    return {"message": "Licitação deletada com sucesso"}
