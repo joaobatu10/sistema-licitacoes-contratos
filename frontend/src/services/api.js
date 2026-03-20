@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
+const API_URL = import.meta.env.DEV
+  ? (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/+$/, "")
+  : "/api";
 
 console.log("API_URL em uso:", API_URL);
 
