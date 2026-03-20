@@ -37,7 +37,7 @@ const GCALC = () => {
   const fetchLicitacoesGcalc = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/licitacoes');
+      const response = await api.get('/licitacoes/');
 
   const gcalcLicitacoes = response.data.filter((licitacao) =>
   licitacao.is_gcalc ||
