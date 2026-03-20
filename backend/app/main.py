@@ -39,7 +39,7 @@ def on_startup():
 
 @app.get("/")
 def root():
-    return {"message": "API rodando"}
+    return {"message": "API rodando", "cors_test": "v2"}
 
 @app.get("/health")
 def health():
