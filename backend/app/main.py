@@ -15,18 +15,10 @@ from app.core.auth import verify_password, create_access_token
 
 app = FastAPI(title="Sistema de Monitoramento de Licitações e Contratos")
 
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "https://sistema-licitacoes-contratos-mj9k.vercel.app",
-    "https://sistema-licitacoes-contratos-mj9k-a3z4bbnbl.vercel.app",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_origin_regex=r"^https://sistema-licitacoes-contratos-mj9k(?:-[a-z0-9-]+)?\.vercel\.app$",
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
