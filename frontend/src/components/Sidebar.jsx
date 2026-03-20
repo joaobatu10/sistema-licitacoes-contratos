@@ -17,31 +17,36 @@ import {
   AccountBalance,
   GroupWork,
 } from "@mui/icons-material";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "../services/api";
 
 const Sidebar = () => {
   const [notificacoes, setNotificacoes] = useState(0);
+  const location = useLocation();
+
+  const getCurrentUser = () => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+      return null;
+    }
+  };
 
   const fetchNotificacoesCount = useCallback(async () => {
     try {
-      const user = JSON.parse(localStorage.getItem("user") || "null");
+      const user = getCurrentUser();
 
-      const params = {
-        apenas_nao_lidas: true,
-      };
+      const response = await api.get("/notificacoes/", {
+        params: {
+          ...(user?.id ? { usuario_id: user.id } : {}),
+          apenas_nao_lidas: true,
+        },
+      });
 
-      if (user?.id) {
-        params.usuario_id = user.id;
-      }
-
-      const res = await api.get("/notificacoes/", { params });
-
-      const data = res?.data;
+      const data = response?.data;
       setNotificacoes(Array.isArray(data) ? data.length : 0);
     } catch (error) {
-      // se der 401/403, o interceptor já limpa o token
       console.error("Erro ao buscar notificações:", error?.response?.data || error);
       setNotificacoes(0);
     }
@@ -53,6 +58,10 @@ const Sidebar = () => {
     const interval = setInterval(fetchNotificacoesCount, 30000);
     return () => clearInterval(interval);
   }, [fetchNotificacoesCount]);
+
+  useEffect(() => {
+    fetchNotificacoesCount();
+  }, [location.pathname, fetchNotificacoesCount]);
 
   return (
     <Drawer
