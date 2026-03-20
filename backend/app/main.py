@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Form, HTTPException, status, Depends
+from fastapi import FastAPI, Form, HTTPException, status, Depends, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from datetime import timedelta
@@ -12,11 +12,6 @@ from app.api.routes.contratos import router as contratos_router
 from app.api.routes.notificacoes import router as notificacoes_router
 from app.models.user import Usuario
 from app.core.auth import verify_password, create_access_token
-
-app = FastAPI(title="Sistema de Monitoramento de Licitações e Contratos")
-
-from fastapi import FastAPI, Form, HTTPException, status, Depends, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Sistema de Monitoramento de Licitações e Contratos")
 
@@ -75,7 +70,22 @@ def login_global(
 ):
     user = db.query(Usuario).filter(Usuario.username == username).first()
 
-    if not user or not verify_password(password, user.password):
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Username ou senha incorretos",
+        )
+
+    try:
+        senha_ok = verify_password(password, user.password)
+    except Exception as e:
+        print("ERRO AO VALIDAR SENHA NO LOGIN:", e)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Username ou senha incorretos",
+        )
+
+    if not senha_ok:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Username ou senha incorretos",
