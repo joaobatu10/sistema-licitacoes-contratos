@@ -25,7 +25,6 @@ const Login = () => {
     setError("");
 
     try {
-      // limpa token antigo antes do login
       localStorage.removeItem("token");
       localStorage.removeItem("user");
 
@@ -34,10 +33,11 @@ const Login = () => {
       form.append("password", password);
 
       const response = await api.post("/login", form, {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-  },
-});
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
+
       const data = response?.data;
 
       if (!data?.access_token) {
@@ -49,14 +49,20 @@ const Login = () => {
 
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      const msg =
-        err?.response?.data?.detail ||
-        err?.response?.data?.message ||
-        err?.message ||
-        "Erro ao fazer login";
-
       console.error("Erro de login:", err?.response?.data || err);
-      setError(`❌ ${msg}`);
+
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.detail;
+
+      if (status === 401) {
+        setError("❌ Usuário ou senha incorretos.");
+      } else if (status === 403) {
+        setError(`❌ ${detail || "Acesso negado."}`);
+      } else if (status === 500) {
+        setError("❌ Erro interno no servidor ao tentar fazer login.");
+      } else {
+        setError(`❌ ${detail || err?.message || "Erro ao fazer login."}`);
+      }
     } finally {
       setLoading(false);
     }
