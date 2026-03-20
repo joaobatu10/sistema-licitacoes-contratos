@@ -10,10 +10,28 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  config.headers = config.headers || {};
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const url = config.url || "";
+  const path = url.startsWith("http")
+    ? new URL(url).pathname
+    : url.startsWith("/")
+      ? url
+      : `/${url}`;
+
+  const isAuthRoute =
+    path === "/login" ||
+    path.startsWith("/login/") ||
+    path === "/register" ||
+    path.startsWith("/register/");
+
+  if (!isAuthRoute) {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } else {
+    delete config.headers.Authorization;
   }
 
   return config;
