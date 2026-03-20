@@ -15,6 +15,11 @@ from app.core.auth import verify_password, create_access_token
 
 app = FastAPI(title="Sistema de Monitoramento de Licitações e Contratos")
 
+from fastapi import FastAPI, Form, HTTPException, status, Depends, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(title="Sistema de Monitoramento de Licitações e Contratos")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,6 +28,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def force_cors_headers(request: Request, call_next):
+    if request.method == "OPTIONS":
+        return Response(
+            status_code=200,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "*",
+                "Access-Control-Allow-Headers": "*",
+            },
+        )
+
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
 class UserLoginOut(BaseModel):
     id: int
     username: str
