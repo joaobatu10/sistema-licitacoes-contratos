@@ -72,7 +72,7 @@ const Usuarios = () => {
       console.log("🔍 Buscando usuários...");
       
       // Usar api.js que tem os interceptors configurados
-      const response = await api.get("/usuarios/");
+      const response = await api.get("/usuarios");
       
       console.log("✅ Usuários carregados:", response.data);
       
