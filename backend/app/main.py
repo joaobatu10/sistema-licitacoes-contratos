@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Form, HTTPException, status, Depends, Request, Response
+from fastapi import FastAPI, Form, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from pydantic import BaseModel
+import traceback
 
 from app.db.session import engine, get_db
 from app.db import base
@@ -23,23 +24,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.middleware("http")
-async def force_cors_headers(request: Request, call_next):
-    if request.method == "OPTIONS":
-        return Response(
-            status_code=200,
-            headers={
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "*",
-                "Access-Control-Allow-Headers": "*",
-            },
-        )
-
-    response = await call_next(request)
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    return response
 class UserLoginOut(BaseModel):
     id: int
     username: str
@@ -68,43 +52,56 @@ def login_global(
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    user = db.query(Usuario).filter(Usuario.username == username).first()
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Username ou senha incorretos",
-        )
-
     try:
+        print(f"LOGIN DEBUG -> username recebido: {username!r}")
+
+        user = db.query(Usuario).filter(Usuario.username == username).first()
+        print(f"LOGIN DEBUG -> usuário encontrado? {'sim' if user else 'não'}")
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Username ou senha incorretos",
+            )
+
+        print(f"LOGIN DEBUG -> id={user.id}, email={user.email}, username={user.username}")
+        print(f"LOGIN DEBUG -> password hash existe? {'sim' if bool(user.password) else 'não'}")
+
         senha_ok = verify_password(password, user.password)
+        print(f"LOGIN DEBUG -> senha válida? {'sim' if senha_ok else 'não'}")
+
+        if not senha_ok:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Username ou senha incorretos",
+            )
+
+        access_token = create_access_token(
+            data={"sub": str(user.id)},
+            expires_delta=timedelta(minutes=30),
+        )
+
+        print("LOGIN DEBUG -> token criado com sucesso")
+
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+            },
+        }
+
+    except HTTPException:
+        raise
     except Exception as e:
-        print("ERRO AO VALIDAR SENHA NO LOGIN:", e)
+        print("ERRO INTERNO NO LOGIN:")
+        traceback.print_exc()
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Username ou senha incorretos",
+            status_code=500,
+            detail=f"Erro interno no login: {str(e)}",
         )
-
-    if not senha_ok:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Username ou senha incorretos",
-        )
-
-    access_token = create_access_token(
-        data={"sub": str(user.id)},
-        expires_delta=timedelta(minutes=30),
-    )
-
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-        },
-    }
 
 app.include_router(users_router)
 app.include_router(licitacoes_router)
