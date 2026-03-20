@@ -38,9 +38,15 @@ const GCALC = () => {
     try {
       setLoading(true);
       const response = await api.get('/licitacoes');
-      // Filtra apenas licitações marcadas como GCALC
-      const gcalcLicitacoes = response.data.filter(licitacao => licitacao.is_gcalc);
-      setLicitacoesGcalc(gcalcLicitacoes);
+
+  const gcalcLicitacoes = response.data.filter((licitacao) =>
+  licitacao.is_gcalc ||
+  licitacao.quartel_ad3 ||
+  licitacao.quartel_27gac ||
+  licitacao.quartel_easa
+);
+
+setLicitacoesGcalc(gcalcLicitacoes);
     } catch (error) {
       console.error('Erro ao buscar licitações GCALC:', error);
     } finally {
