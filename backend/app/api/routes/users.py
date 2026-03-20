@@ -236,28 +236,7 @@ def deletar_usuario(
     
     return {"message": f"Usuário {username} foi deletado com sucesso"}
 
-class ResetPasswordDebug(BaseModel):
-    username: str
-    new_password: str
 
-@router.post("/debug/reset-password")
-def reset_password_debug(data: ResetPasswordDebug, db: Session = Depends(get_db)):
-    user = db.query(Usuario).filter(Usuario.username == data.username).first()
-
-    if not user:
-        raise HTTPException(404, "Usuário não encontrado")
-
-    user.password = get_password_hash(data.new_password)
-
-    if hasattr(user, "is_active"):
-        user.is_active = True
-
-    if hasattr(user, "is_approved"):
-        user.is_approved = True
-
-    db.commit()
-
-    return {"message": f"Senha do usuário {user.username} atualizada com sucesso"}
 @router.post("/login")
 def login(username: str = Form(), password: str = Form(), db: Session = Depends(get_db)):
     """Rota de login - autentica usuário e retorna token JWT"""
