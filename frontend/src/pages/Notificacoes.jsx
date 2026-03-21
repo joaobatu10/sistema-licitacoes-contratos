@@ -7,9 +7,6 @@ import {
   Chip,
   IconButton,
   Button,
-  List,
-  ListItem,
-  Divider,
   Alert,
   CircularProgress,
   Dialog,
@@ -18,7 +15,10 @@ import {
   DialogActions,
   Tooltip,
   Badge,
+  Stack,
+  useMediaQuery,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import {
   Notifications,
   NotificationsActive,
@@ -26,6 +26,7 @@ import {
   Delete,
   MarkEmailRead,
   Refresh,
+  Close,
 } from "@mui/icons-material";
 import api from "../services/api";
 
@@ -35,6 +36,9 @@ const Notificacoes = () => {
   const [selectedNotif, setSelectedNotif] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [error, setError] = useState("");
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const getCurrentUser = () => {
     try {
@@ -147,6 +151,11 @@ const Notificacoes = () => {
     return icones[tipo] || "📢";
   };
 
+  const formatarData = (data) => {
+    if (!data) return "Data não informada";
+    return new Date(data).toLocaleString("pt-BR");
+  };
+
   const naoLidas = notificacoes.filter((n) => !n.lida).length;
 
   useEffect(() => {
@@ -155,37 +164,77 @@ const Notificacoes = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "60vh",
+        }}
+      >
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+    <Box sx={{ width: "100%", pb: 4 }}>
+      <Box
+        sx={{
+          mb: 3,
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          justifyContent: "space-between",
+          alignItems: { xs: "flex-start", sm: "center" },
+          gap: 2,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <Badge badgeContent={naoLidas} color="error">
-            <Notifications sx={{ fontSize: 32, color: "primary.main" }} />
+            <Notifications sx={{ fontSize: { xs: 30, sm: 34 }, color: "primary.main" }} />
           </Badge>
-          <Typography variant="h4" component="h1">
-            Notificações
-          </Typography>
+
+          <Box>
+            <Typography
+              fontWeight="bold"
+              sx={{
+                fontSize: { xs: "1.8rem", sm: "2.2rem" },
+                color: "primary.main",
+                lineHeight: 1.1,
+              }}
+            >
+              Notificações
+            </Typography>
+
+            <Typography color="text.secondary" sx={{ fontSize: { xs: "0.95rem", sm: "1rem" } }}>
+              Acompanhe avisos, atualizações e alertas do sistema.
+            </Typography>
+          </Box>
         </Box>
 
-        <Box sx={{ display: "flex", gap: 1 }}>
-          <Tooltip title="Atualizar">
-            <IconButton onClick={fetchNotificacoes} color="primary">
-              <Refresh />
-            </IconButton>
-          </Tooltip>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            gap: 1,
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            onClick={fetchNotificacoes}
+            fullWidth={isMobile}
+          >
+            Atualizar
+          </Button>
 
           {naoLidas > 0 && (
             <Button
-              variant="outlined"
+              variant="contained"
               startIcon={<MarkEmailRead />}
               onClick={marcarTodasComoLidas}
-              size="small"
+              fullWidth={isMobile}
             >
               Marcar Todas como Lidas
             </Button>
@@ -199,136 +248,188 @@ const Notificacoes = () => {
         </Alert>
       )}
 
-      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        sx={{ mb: 3 }}
+      >
         <Alert severity="info" sx={{ flex: 1 }}>
           <strong>{notificacoes.length}</strong> notificações totais
         </Alert>
 
-        {naoLidas > 0 && (
-          <Alert severity="warning" sx={{ flex: 1 }}>
-            <strong>{naoLidas}</strong> não lidas
-          </Alert>
-        )}
-      </Box>
+        <Alert severity={naoLidas > 0 ? "warning" : "success"} sx={{ flex: 1 }}>
+          <strong>{naoLidas}</strong> não lidas
+        </Alert>
+      </Stack>
 
       {notificacoes.length === 0 ? (
-        <Card>
-          <CardContent sx={{ textAlign: "center", py: 4 }}>
+        <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+          <CardContent sx={{ textAlign: "center", py: 5 }}>
             <Notifications sx={{ fontSize: 64, color: "grey.400", mb: 2 }} />
-            <Typography variant="h6" color="textSecondary">
+            <Typography variant="h6" color="text.secondary">
               Nenhuma notificação encontrada
             </Typography>
           </CardContent>
         </Card>
       ) : (
-        <List>
-          {notificacoes.map((notificacao, index) => (
-            <React.Fragment key={notificacao.id}>
-              <ListItem
-                sx={{
-                  bgcolor: notificacao.lida ? "background.paper" : "action.hover",
-                  borderRadius: 1,
-                  mb: 1,
-                  border: 1,
-                  borderColor: notificacao.lida ? "divider" : "primary.light",
-                }}
-              >
-                <Card sx={{ width: "100%", boxShadow: "none" }}>
-                  <CardContent>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <Box sx={{ flex: 1 }}>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, flexWrap: "wrap" }}>
-                          <Typography variant="body2" sx={{ fontSize: "1.2em" }}>
-                            {getIconeTipo(notificacao.tipo)}
-                          </Typography>
+        <Stack spacing={2}>
+          {notificacoes.map((notificacao) => (
+            <Card
+              key={notificacao.id}
+              sx={{
+                borderRadius: 3,
+                boxShadow: 2,
+                border: 1,
+                borderColor: notificacao.lida ? "divider" : "primary.light",
+                backgroundColor: notificacao.lida ? "#fff" : "rgba(25, 118, 210, 0.04)",
+              }}
+            >
+              <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    justifyContent: "space-between",
+                    alignItems: { xs: "stretch", sm: "flex-start" },
+                    gap: 2,
+                  }}
+                >
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        mb: 1,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <Typography sx={{ fontSize: "1.1rem" }}>
+                        {getIconeTipo(notificacao.tipo)}
+                      </Typography>
 
-                          <Typography variant="h6" component="h3">
-                            {notificacao.titulo}
-                          </Typography>
+                      <Typography
+                        fontWeight="bold"
+                        sx={{
+                          fontSize: { xs: "1rem", sm: "1.1rem" },
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {notificacao.titulo}
+                      </Typography>
 
-                          <Chip
-                            label={(notificacao.tipo || "info").toUpperCase()}
-                            color={getCorTipo(notificacao.tipo)}
-                            size="small"
-                          />
+                      <Chip
+                        label={(notificacao.tipo || "info").toUpperCase()}
+                        color={getCorTipo(notificacao.tipo)}
+                        size="small"
+                      />
 
-                          {!notificacao.lida && (
-                            <Chip
-                              label="NOVA"
-                              color="error"
-                              size="small"
-                              icon={<NotificationsActive />}
-                            />
-                          )}
-                        </Box>
-
-                        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                          {notificacao.mensagem}
-                        </Typography>
-
-                        <Typography variant="caption" color="textSecondary">
-                          {notificacao.data_criacao
-                            ? new Date(notificacao.data_criacao).toLocaleString("pt-BR")
-                            : "Data não informada"}
-                          {notificacao.lida && notificacao.data_leitura && (
-                            <span>
-                              {" "}
-                              • Lida em {new Date(notificacao.data_leitura).toLocaleString("pt-BR")}
-                            </span>
-                          )}
-                        </Typography>
-                      </Box>
-
-                      <Box sx={{ display: "flex", flexDirection: "column", gap: 1, ml: 2 }}>
-                        {!notificacao.lida && (
-                          <Tooltip title="Marcar como lida">
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => marcarComoLida(notificacao.id)}
-                            >
-                              <Check />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-
-                        <Tooltip title="Deletar">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => {
-                              setSelectedNotif(notificacao);
-                              setOpenDialog(true);
-                            }}
-                          >
-                            <Delete />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
+                      {!notificacao.lida && (
+                        <Chip
+                          label="NOVA"
+                          color="error"
+                          size="small"
+                          icon={<NotificationsActive />}
+                        />
+                      )}
                     </Box>
-                  </CardContent>
-                </Card>
-              </ListItem>
 
-              {index < notificacoes.length - 1 && <Divider />}
-            </React.Fragment>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 1.5, wordBreak: "break-word" }}
+                    >
+                      {notificacao.mensagem}
+                    </Typography>
+
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {formatarData(notificacao.data_criacao)}
+                    </Typography>
+
+                    {notificacao.lida && notificacao.data_leitura && (
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Lida em {formatarData(notificacao.data_leitura)}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: { xs: "row", sm: "column" },
+                      justifyContent: { xs: "flex-end", sm: "flex-start" },
+                      gap: 1,
+                      alignSelf: { xs: "stretch", sm: "auto" },
+                    }}
+                  >
+                    {!notificacao.lida && (
+                      <Tooltip title="Marcar como lida">
+                        <IconButton
+                          color="primary"
+                          onClick={() => marcarComoLida(notificacao.id)}
+                          sx={{ border: "1px solid", borderColor: "divider" }}
+                        >
+                          <Check />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+
+                    <Tooltip title="Deletar">
+                      <IconButton
+                        color="error"
+                        onClick={() => {
+                          setSelectedNotif(notificacao);
+                          setOpenDialog(true);
+                        }}
+                        sx={{ border: "1px solid", borderColor: "divider" }}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
           ))}
-        </List>
+        </Stack>
       )}
 
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle>Confirmar Exclusão</DialogTitle>
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        fullScreen={isMobile}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          Confirmar Exclusão
+          <IconButton onClick={() => setOpenDialog(false)}>
+            <Close />
+          </IconButton>
+        </DialogTitle>
+
         <DialogContent>
           <Typography>
             Tem certeza que deseja deletar a notificação "{selectedNotif?.titulo}"?
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancelar</Button>
+
+        <DialogActions sx={{ p: 2, flexDirection: { xs: "column", sm: "row" } }}>
+          <Button onClick={() => setOpenDialog(false)} fullWidth={isMobile}>
+            Cancelar
+          </Button>
+
           <Button
             color="error"
             onClick={() => deletarNotificacao(selectedNotif?.id)}
             variant="contained"
+            fullWidth={isMobile}
           >
             Deletar
           </Button>
