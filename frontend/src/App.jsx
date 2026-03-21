@@ -88,21 +88,13 @@ function App() {
       )}
 
       <Box
-        sx={{
-          flex: 1,
-          minWidth: 0,
-          display: "flex",
-          flexDirection: "column",
-          width: {
-            xs: "100%",
-            md: isAuthenticated ? `calc(100% - ${drawerWidth}px)` : "100%",
-          },
-          ml: {
-            xs: 0,
-            md: isAuthenticated ? `${drawerWidth}px` : 0,
-          },
-        }}
-      >
+  sx={{
+    flex: 1,
+    minWidth: 0,
+    display: "flex",
+    flexDirection: "column",
+  }}
+>
         {isAuthenticated && <Header />}
 
         <Container
