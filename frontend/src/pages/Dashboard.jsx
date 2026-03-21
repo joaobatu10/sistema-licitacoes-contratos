@@ -220,8 +220,15 @@ export default function Dashboard() {
     };
   }, []);
 
-  return (
-    <Box sx={{ p: { xs: 2, md: 4 } }}>
+ return (
+  <Box
+    sx={{
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+    }}
+  >
+    <Box sx={{ p: { xs: 2, md: 4 }, flex: 1 }}>
       <Typography variant="h4" fontWeight="bold" mb={1} sx={{ 
         background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
         backgroundClip: 'text',
@@ -1113,6 +1120,23 @@ export default function Dashboard() {
           </Card>
         </Grid>
       </Grid>
+        </Box>
+
+    <Box
+      sx={{
+        textAlign: "center",
+        py: 2,
+        px: 2,
+        borderTop: "1px solid",
+        borderColor: "divider",
+        color: "text.secondary",
+        backgroundColor: "#fff",
+      }}
+    >
+      <Typography variant="body2">
+        Desenvolvido pelo 3º Sgt Cador - Auxiliar SALC
+      </Typography>
     </Box>
-  );
+  </Box>
+);
 };
