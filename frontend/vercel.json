@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://sistema-licitacoes-contratos-production.up.railway.app/:path*"
+      "destination": "https://sistema-licitacoes-contratos-production.up.railway.app/api/:path*"
     }
   ]
 }
