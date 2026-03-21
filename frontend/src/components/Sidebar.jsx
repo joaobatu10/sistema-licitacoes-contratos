@@ -6,6 +6,9 @@ import {
   ListItemIcon,
   ListItemText,
   Badge,
+  Box,
+  Typography,
+  IconButton,
 } from "@mui/material";
 import {
   Dashboard,
@@ -16,12 +19,90 @@ import {
   Assessment,
   AccountBalance,
   GroupWork,
+  Menu as MenuIcon,
 } from "@mui/icons-material";
 import { NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "../services/api";
 
-const Sidebar = () => {
+export const drawerWidth = 240;
+
+const SidebarContent = ({ notificacoes, onItemClick }) => {
+  const menuItems = [
+    { text: "Dashboard", icon: <Dashboard sx={{ color: "white" }} />, to: "/dashboard" },
+    { text: "Licitações", icon: <Description sx={{ color: "white" }} />, to: "/licitacoes" },
+    { text: "GCALC", icon: <GroupWork sx={{ color: "white" }} />, to: "/gcalc" },
+    { text: "Contratos", icon: <Work sx={{ color: "white" }} />, to: "/contratos" },
+    { text: "Processos", icon: <AccountBalance sx={{ color: "white" }} />, to: "/processos" },
+    { text: "Usuários", icon: <People sx={{ color: "white" }} />, to: "/usuarios" },
+    { text: "Relatórios", icon: <Assessment sx={{ color: "white" }} />, to: "/relatorios" },
+    {
+      text: "Notificações",
+      icon: (
+        <Badge badgeContent={notificacoes} color="error">
+          <Notifications sx={{ color: "white" }} />
+        </Badge>
+      ),
+      to: "/notificacoes",
+    },
+  ];
+
+  return (
+    <Box
+      sx={{
+        height: "100%",
+        backgroundColor: "#1E293B",
+        color: "white",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <Box sx={{ px: 2.5, py: 3 }}>
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: "bold",
+            color: "#fff",
+          }}
+        >
+          SALC
+        </Typography>
+      </Box>
+
+      <List sx={{ px: 1 }}>
+        {menuItems.map((item) => (
+          <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+            <ListItemButton
+              component={NavLink}
+              to={item.to}
+              onClick={onItemClick}
+              sx={{
+                borderRadius: 2,
+                color: "#fff",
+                "& .active": {
+                  backgroundColor: "rgba(255,255,255,0.12)",
+                },
+                "&.active": {
+                  backgroundColor: "rgba(255,255,255,0.12)",
+                },
+                "&:hover": {
+                  backgroundColor: "rgba(255,255,255,0.08)",
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40, color: "#fff" }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
+};
+
+const Sidebar = ({ mobileOpen, onDrawerToggle, onDrawerClose }) => {
   const [notificacoes, setNotificacoes] = useState(0);
   const location = useLocation();
 
@@ -64,102 +145,64 @@ const Sidebar = () => {
   }, [location.pathname, fetchNotificacoesCount]);
 
   return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: 240,
-        flexShrink: 0,
-        "& .MuiDrawer-paper": {
-          width: 240,
-          boxSizing: "border-box",
+    <>
+      <IconButton
+        onClick={onDrawerToggle}
+        sx={{
+          display: { xs: "flex", md: "none" },
+          position: "fixed",
+          top: 12,
+          left: 12,
+          zIndex: 1300,
           backgroundColor: "#1E293B",
-          color: "white",
-        },
-      }}
-    >
-      <List>
-        <ListItem>
-          <ListItemText
-            primary="SALC"
-            sx={{ fontSize: "30px", fontWeight: "bold", color: "#fff" }}
-          />
-        </ListItem>
+          color: "#fff",
+          "&:hover": {
+            backgroundColor: "#334155",
+          },
+        }}
+      >
+        <MenuIcon />
+      </IconButton>
 
-        <ListItem disablePadding>
-          <ListItemButton component={NavLink} to="/dashboard">
-            <ListItemIcon>
-              <Dashboard sx={{ color: "white" }} />
-            </ListItemIcon>
-            <ListItemText primary="Dashboard" />
-          </ListItemButton>
-        </ListItem>
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={onDrawerClose}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: "block", md: "none" },
+          "& .MuiDrawer-paper": {
+            width: drawerWidth,
+            boxSizing: "border-box",
+            border: "none",
+          },
+        }}
+      >
+        <SidebarContent
+          notificacoes={notificacoes}
+          onItemClick={onDrawerClose}
+        />
+      </Drawer>
 
-        <ListItem disablePadding>
-          <ListItemButton component={NavLink} to="/licitacoes">
-            <ListItemIcon>
-              <Description sx={{ color: "white" }} />
-            </ListItemIcon>
-            <ListItemText primary="Licitações" />
-          </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding>
-          <ListItemButton component={NavLink} to="/gcalc">
-            <ListItemIcon>
-              <GroupWork sx={{ color: "white" }} />
-            </ListItemIcon>
-            <ListItemText primary="GCALC" />
-          </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding>
-          <ListItemButton component={NavLink} to="/contratos">
-            <ListItemIcon>
-              <Work sx={{ color: "white" }} />
-            </ListItemIcon>
-            <ListItemText primary="Contratos" />
-          </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding>
-          <ListItemButton component={NavLink} to="/processos">
-            <ListItemIcon>
-              <AccountBalance sx={{ color: "white" }} />
-            </ListItemIcon>
-            <ListItemText primary="Processos" />
-          </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding>
-          <ListItemButton component={NavLink} to="/usuarios">
-            <ListItemIcon>
-              <People sx={{ color: "white" }} />
-            </ListItemIcon>
-            <ListItemText primary="Usuários" />
-          </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding>
-          <ListItemButton component={NavLink} to="/relatorios">
-            <ListItemIcon>
-              <Assessment sx={{ color: "white" }} />
-            </ListItemIcon>
-            <ListItemText primary="Relatórios" />
-          </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding>
-          <ListItemButton component={NavLink} to="/notificacoes">
-            <ListItemIcon>
-              <Badge badgeContent={notificacoes} color="error">
-                <Notifications sx={{ color: "white" }} />
-              </Badge>
-            </ListItemIcon>
-            <ListItemText primary="Notificações" />
-          </ListItemButton>
-        </ListItem>
-      </List>
-    </Drawer>
+      <Drawer
+        variant="permanent"
+        open
+        sx={{
+          display: { xs: "none", md: "block" },
+          width: drawerWidth,
+          flexShrink: 0,
+          "& .MuiDrawer-paper": {
+            width: drawerWidth,
+            boxSizing: "border-box",
+            backgroundColor: "#1E293B",
+            color: "white",
+            border: "none",
+          },
+        }}
+      >
+        <SidebarContent notificacoes={notificacoes} />
+      </Drawer>
+    </>
   );
 };
 

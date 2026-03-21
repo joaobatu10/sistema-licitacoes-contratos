@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Box, Container, CircularProgress } from "@mui/material";
 import Header from "./components/Header";
-import Sidebar from "./components/Sidebar";
+import Sidebar, { drawerWidth } from "./components/Sidebar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Licitacoes from "./pages/Licitacoes";
@@ -19,37 +19,59 @@ import { useEffect, useState } from "react";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
   const checkAuthStatus = () => {
     const token = localStorage.getItem("token");
-    const ok = token && token !== "undefined" && token !== "null" && token.trim() !== "";
+    const ok =
+      token &&
+      token !== "undefined" &&
+      token !== "null" &&
+      token.trim() !== "";
     setIsAuthenticated(!!ok);
   };
 
-  useEffect(() => {
-  checkAuthStatus();
-
-  const handleAuthChanged = () => checkAuthStatus();
-
-  window.addEventListener("storage", handleAuthChanged);
-  window.addEventListener("auth-changed", handleAuthChanged);
-
-  return () => {
-    window.removeEventListener("storage", handleAuthChanged);
-    window.removeEventListener("auth-changed", handleAuthChanged);
+  const handleDrawerToggle = () => {
+    setMobileOpen((prev) => !prev);
   };
-}, []);
 
+  const handleDrawerClose = () => {
+    setMobileOpen(false);
+  };
 
-  // atualiza também quando mudar rota
+  useEffect(() => {
+    checkAuthStatus();
+
+    const handleAuthChanged = () => checkAuthStatus();
+
+    window.addEventListener("storage", handleAuthChanged);
+    window.addEventListener("auth-changed", handleAuthChanged);
+
+    return () => {
+      window.removeEventListener("storage", handleAuthChanged);
+      window.removeEventListener("auth-changed", handleAuthChanged);
+    };
+  }, []);
+
   useEffect(() => {
     checkAuthStatus();
   }, [location.pathname]);
 
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
   if (isAuthenticated === null) {
     return (
-      <Box sx={{ display: "flex", height: "100vh", justifyContent: "center", alignItems: "center" }}>
+      <Box
+        sx={{
+          display: "flex",
+          height: "100vh",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -57,11 +79,41 @@ function App() {
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#f4f6f8" }}>
-      {isAuthenticated && <Sidebar />}
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      {isAuthenticated && (
+        <Sidebar
+          mobileOpen={mobileOpen}
+          onDrawerToggle={handleDrawerToggle}
+          onDrawerClose={handleDrawerClose}
+        />
+      )}
+
+      <Box
+        sx={{
+          flex: 1,
+          minWidth: 0,
+          display: "flex",
+          flexDirection: "column",
+          width: {
+            xs: "100%",
+            md: isAuthenticated ? `calc(100% - ${drawerWidth}px)` : "100%",
+          },
+          ml: {
+            xs: 0,
+            md: isAuthenticated ? `${drawerWidth}px` : 0,
+          },
+        }}
+      >
         {isAuthenticated && <Header />}
 
-        <Container component="main" sx={{ flex: 1, p: 3, bgcolor: "transparent" }}>
+        <Container
+          component="main"
+          maxWidth={false}
+          sx={{
+            flex: 1,
+            p: { xs: 1.5, sm: 2, md: 3 },
+            bgcolor: "transparent",
+          }}
+        >
           <Routes>
             <Route
               path="/login"
@@ -72,21 +124,98 @@ function App() {
               element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />}
             />
 
-            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/licitacoes" element={<ProtectedRoute><Licitacoes /></ProtectedRoute>} />
-            <Route path="/gcalc" element={<ProtectedRoute><GCALC /></ProtectedRoute>} />
-            <Route path="/contratos" element={<ProtectedRoute><Contratos /></ProtectedRoute>} />
-            <Route path="/processos" element={<ProtectedRoute><Processos /></ProtectedRoute>} />
-            <Route path="/usuarios" element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
-            <Route path="/relatorios" element={<ProtectedRoute><Relatorios /></ProtectedRoute>} />
-            <Route path="/notificacoes" element={<ProtectedRoute><Notificacoes /></ProtectedRoute>} />
-            <Route path="/cadastro-licitacao" element={<ProtectedRoute><CadastroLicitacao /></ProtectedRoute>} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/licitacoes"
+              element={
+                <ProtectedRoute>
+                  <Licitacoes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gcalc"
+              element={
+                <ProtectedRoute>
+                  <GCALC />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contratos"
+              element={
+                <ProtectedRoute>
+                  <Contratos />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/processos"
+              element={
+                <ProtectedRoute>
+                  <Processos />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/usuarios"
+              element={
+                <ProtectedRoute>
+                  <Usuarios />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/relatorios"
+              element={
+                <ProtectedRoute>
+                  <Relatorios />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notificacoes"
+              element={
+                <ProtectedRoute>
+                  <Notificacoes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cadastro-licitacao"
+              element={
+                <ProtectedRoute>
+                  <CadastroLicitacao />
+                </ProtectedRoute>
+              }
+            />
 
             <Route path="/debug" element={<TesteDebug />} />
 
-            {/* rota coringa */}
-            <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
+            <Route
+              path="*"
+              element={
+                <Navigate
+                  to={isAuthenticated ? "/dashboard" : "/login"}
+                  replace
+                />
+              }
+            />
           </Routes>
         </Container>
       </Box>
