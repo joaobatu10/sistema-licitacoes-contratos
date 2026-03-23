@@ -514,15 +514,20 @@ const Relatorios = () => {
 
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>Modalidade</InputLabel>
-                <Select
+                <InputLabel shrink>Modalidade</InputLabel>
+                  <Select
                   value={filtros.modalidade}
                   onChange={(e) => handleFiltroChange("modalidade", e.target.value)}
                   label="Modalidade"
+                  displayEmpty
+                  renderValue={(selected) => {
+                    if (!selected) {
+                      return <span style={{ color: "#666" }}>Todas as modalidades</span>;
+                    }
+                    return selected;
+                  }}
                 >
-                  <MenuItem value="">
-                    <em>Todas as modalidades</em>
-                  </MenuItem>
+                  <MenuItem value="">Todas as modalidades</MenuItem>
                   {modalidades.map((modalidade) => (
                     <MenuItem key={modalidade} value={modalidade}>
                       {modalidade}
@@ -534,22 +539,27 @@ const Relatorios = () => {
 
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>Status</InputLabel>
+              <InputLabel shrink>Status</InputLabel>
                 <Select
-                  value={filtros.status}
-                  onChange={(e) => handleFiltroChange("status", e.target.value)}
-                  label="Status"
-                >
-                  <MenuItem value="">
-                    <em>Todos os status</em>
+                value={filtros.status}
+                onChange={(e) => handleFiltroChange("status", e.target.value)}
+                label="Status"
+                displayEmpty
+                renderValue={(selected) => {
+                  if (!selected) {
+                    return <span style={{ color: "#666" }}>Todos os status</span>;
+                  }
+                  return selected;
+                }}
+              >
+                <MenuItem value="">Todos os status</MenuItem>
+                {statusOptions.map((status) => (
+                  <MenuItem key={status} value={status}>
+                    {status}
                   </MenuItem>
-                  {statusOptions.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {status}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                ))}
+              </Select>
+            </FormControl>
             </Grid>
           </Grid>
 
