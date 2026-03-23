@@ -137,18 +137,19 @@ export default function Dashboard() {
     async function fetchAll() {
       try {
         const [lics, cons, users, notifs] = await Promise.all([
-          api.get("/licitacoes/"),
-          api.get("/contratos/").catch(() => ({ data: [] })),
-          api.get("/usuarios/").catch(() => ({ data: [] })),
-          api.get("/notificacoes/?apenas_nao_lidas=true").catch(() => ({ data: [] })),
-        ]);
+        api.get("/licitacoes/"),
+        api.get("/contratos/").catch(() => ({ data: [] })),
+        api.get("/usuarios").catch((error) => {
+          console.error("Erro ao buscar usuários no dashboard:", error?.response?.data || error);
+          return { data: [] };
+        }),
+        api.get("/notificacoes/?apenas_nao_lidas=true").catch(() => ({ data: [] })),
+      ]);
 
-        if (!mounted) return;
-
-        const licitacoes = lics.data || [];
-        const contratos = cons.data || [];
-        const usuarios = users.data || [];
-        const notificacoes = notifs.data || [];
+        const licitacoes = Array.isArray(lics.data) ? lics.data : [];
+        const contratos = Array.isArray(cons.data) ? cons.data : [];
+        const usuarios = Array.isArray(users.data) ? users.data : [];
+        const notificacoes = Array.isArray(notifs.data) ? notifs.data : [];
 
         setKpis({
           licitacoes: licitacoes.length,
