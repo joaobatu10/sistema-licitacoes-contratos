@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { Box, Container, CircularProgress } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import Header from "./components/Header";
 import Sidebar, { drawerWidth } from "./components/Sidebar";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -21,6 +21,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
 
   const checkAuthStatus = () => {
     const token = localStorage.getItem("token");
@@ -97,16 +98,17 @@ function App() {
 >
         {isAuthenticated && <Header />}
 
-        <Container
-          component="main"
-          maxWidth={false}
-          sx={{
-            flex: 1,
-            p: { xs: 1.5, sm: 2, md: 3 },
-            bgcolor: "transparent",
-          }}
-        >
-          <Routes>
+        <Box
+  component="main"
+  sx={{
+    flex: 1,
+    p: isAuthPage ? 0 : { xs: 1.5, sm: 2, md: 3 },
+    bgcolor: "transparent",
+    minHeight: isAuthPage ? "100dvh" : "auto",
+    width: "100%",
+  }}
+>
+  <Routes>
             <Route
               path="/login"
               element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />}
@@ -209,7 +211,7 @@ function App() {
               }
             />
           </Routes>
-        </Container>
+        </Box>
       </Box>
     </Box>
   );
