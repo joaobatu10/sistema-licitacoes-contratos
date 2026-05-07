@@ -277,11 +277,11 @@ const GCALC = () => {
         </Grid>
 
         {quarteis.map((quartel) => {
-          const count = licitacoesGcalc.filter((l) =>
-            participaDoQuartel(l, quartel.label)
-          ).length;
+            const count = licitacoesGcalc.filter((l) =>
+              normalizarQuartel(l.orgao_responsavel) === quartel.orgao
+            ).length;
 
-          const isActive = orgaoFilter === quartel.orgao;
+            const isActive = orgaoFilter === quartel.orgao;
 
           return (
             <Grid item xs={12} sm={6} md={3} key={quartel.key}>
